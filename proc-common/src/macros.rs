@@ -1,10 +1,8 @@
 #[macro_export]
 macro_rules! error_at {
     ($target:expr, $message:expr) => {{
-        $crate::syn::Error::new(
-            $crate::syn::spanned::Spanned::span(&$target),
-            $message
-        ).to_compile_error()
+        $crate::syn::Error::new($crate::syn::spanned::Spanned::span(&$target), $message)
+            .to_compile_error()
     }};
 }
 
@@ -46,5 +44,5 @@ macro_rules! q {
 macro_rules! compile_error {
     ($msg:literal) => {
         $crate::q!(compile_error! {$msg})
-    }
+    };
 }

@@ -1,12 +1,13 @@
-use proc_common::parse_macro_processor;
-use syn::ItemFn;
 use quote::quote;
+use syn::ItemFn;
+
+use proc_common::procutils::parse_macro_processor;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn attribute(input: ItemFn) -> proc_macro2::TokenStream {
     let (name, docs, proc) = match parse_macro_processor(&input) {
         Ok(ok) => ok,
-        Err(tokens) => return tokens
+        Err(tokens) => return tokens,
     };
     quote! {
         #(#docs)*

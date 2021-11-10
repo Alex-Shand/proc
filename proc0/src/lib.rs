@@ -24,9 +24,5 @@ pub fn attribute(
     _attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    proc_macro::TokenStream::from(
-        attribute::attribute(
-            syn::parse_macro_input!(input)
-        )
-    )
+    proc_macro::TokenStream::from(attribute::attribute(syn::parse_macro_input!(input)))
 }
