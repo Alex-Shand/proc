@@ -1,3 +1,4 @@
+/// Emit a compiler error using the span of the `$target` item
 #[macro_export]
 macro_rules! error_at {
     ($target:expr, $message:expr) => {{
@@ -6,6 +7,7 @@ macro_rules! error_at {
     }};
 }
 
+/// Helper to generate custom `syn` keywords
 #[macro_export]
 macro_rules! keywords {
     ($($keyword:ident),+ $(,)?) => {
@@ -15,24 +17,36 @@ macro_rules! keywords {
     }
 }
 
+#[doc(hidden)]
 #[macro_export]
-macro_rules! tests {
-    ($macro:path: pass = $pass:literal fail = $fail:literal) => {
+macro_rules! proc_internal_hack {
+    () => {
         #[cfg(test)]
-        mod tests {
-            use super::*;
-
-            #[test]
-            fn test() {
-                let t = $crate::trybuild::TestCases::new();
-                t.pass(format!("{}/*.rs", $pass));
-                t.compile_fail(format!("{}/*.rs", $fail));
-                $crate::check_expansion($pass, $macro);
-            }
-        }
+        use proc_common::testutils;
+        use syn;
     };
 }
 
+// #[doc(hidden)]
+// #[macro_export]
+// macro_rules! tests {
+//     ($macro:path: pass = $pass:literal fail = $fail:literal) => {
+//         #[cfg(test)]
+//         mod tests {
+//             use super::*;
+
+//             #[test]
+//             fn test() {
+//                 let t = $crate::trybuild::TestCases::new();
+//                 t.pass(format!("{}/*.rs", $pass));
+//                 t.compile_fail(format!("{}/*.rs", $fail));
+//                 $crate::check_expansion($pass, $macro);
+//             }
+//         }
+//     };
+// }
+
+#[doc(hidden)]
 #[macro_export]
 macro_rules! q {
     ($($tt:tt)*) => {
@@ -40,6 +54,7 @@ macro_rules! q {
     }
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! compile_error {
     ($msg:literal) => {

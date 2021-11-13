@@ -1,22 +1,41 @@
+//! Proc macros for `proc` to re-export
+
+#![warn(elided_lifetimes_in_paths)]
+#![warn(missing_docs)]
+#![warn(noop_method_call)]
+#![warn(unreachable_pub)]
+#![warn(unused_crate_dependencies)]
+#![warn(unused_import_braces)]
+#![warn(unused_lifetimes)]
+#![warn(unused_qualifications)]
+#![deny(unsafe_code)]
+#![deny(unsafe_op_in_unsafe_fn)]
+#![deny(unused_results)]
+#![deny(missing_debug_implementations)]
+#![deny(missing_copy_implementations)]
+//#![deny(dead_code)]
+#![warn(clippy::pedantic)]
+
+use proc_macro2::TokenStream;
 use quote::quote;
 use syn::ItemFn;
 
+proc_common::proc_internal_hack! {}
 use proc_common::procutils::parse_macro_processor;
 
+/// Define a function-like proc macro
+#[proc0::attribute]
 #[allow(clippy::needless_pass_by_value)]
-pub(crate) fn attribute(input: ItemFn) -> proc_macro2::TokenStream {
-    let (name, test_name, docs, proc) = match parse_macro_processor(&input, "attribute") {
+fn function(input: ItemFn) -> TokenStream {
+    let (name, test_name, docs, proc) = match parse_macro_processor(&input, "macro") {
         Ok(ok) => ok,
         Err(tokens) => return tokens,
     };
 
     quote! {
         #(#docs)*
-        #[proc_macro_attribute]
-        pub fn #name(
-            _attr: ::proc_macro::TokenStream,
-            input: ::proc_macro::TokenStream
-        ) -> ::proc_macro::TokenStream {
+        #[proc_macro]
+        pub fn #name(input: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
             #input
             ::std::convert::Into::into(#name(#proc::syn::parse_macro_input!(input)))
         }
@@ -38,21 +57,20 @@ pub(crate) fn attribute(input: ItemFn) -> proc_macro2::TokenStream {
 syntax_abuse::tests! {
     use proc_common::{q, compile_error, testutils::TokenStream};
 
-    fn attribute(input: TokenStream) -> TokenStream {
-        TokenStream(super::attribute(syn::parse2(input.0).unwrap()))
+    fn function(input: TokenStream) -> TokenStream {
+        __function(input.0).unwrap()
     }
 
     testcase! {
         success,
-        attribute(q! {
+        function(q! {
             fn test(input: Type) -> TokenStream {
                 do_something_with(input)
             }
         }),
         q! {
-            #[proc_macro_attribute]
+            #[proc_macro]
             pub fn test(
-                _attr: ::proc_macro::TokenStream,
                 input: ::proc_macro::TokenStream
             ) -> ::proc_macro::TokenStream {
                 fn test(input: Type) -> TokenStream {
@@ -81,61 +99,60 @@ syntax_abuse::tests! {
 
     testcase! {
         empty_argument_list,
-        attribute(q! {
+        function(q! {
             fn test() -> TokenStream {
             }
         }),
-        compile_error!("The attribute function should have one argument")
+        compile_error!("The macro function should have one argument")
     }
 
     testcase! {
         more_than_one_argument,
-        attribute(q! {
+        function(q! {
             fn test(first: Type, second: Type) -> TokenStream {
             }
         }),
-        compile_error!("The attribute function should have one argument")
+        compile_error!("The macro function should have one argument")
     }
 
     testcase! {
         self_argument,
-        attribute(q! {
+        function(q! {
             fn test(self) -> TokenStream {
             }
         }),
-        compile_error!("The attribute function should be free standing")
+        compile_error!("The macro function should be free standing")
     }
 
     testcase! {
         ref_self_argument,
-        attribute(q! {
+        function(q! {
             fn test(&self) -> TokenStream {
             }
         }),
-        compile_error!("The attribute function should be free standing")
+        compile_error!("The macro function should be free standing")
     }
 
     testcase! {
         mut_ref_self_argument,
-        attribute(q! {
+        function(q! {
             fn test(&mut self) -> TokenStream {
             }
         }),
-        compile_error!("The attribute function should be free standing")
+        compile_error!("The macro function should be free standing")
     }
 
     testcase! {
         docs,
-        attribute(q! {
+        function(q! {
             /// Docs
             fn test(input: Input) -> TokenStream {
             }
         }),
         q! {
             /// Docs
-            #[proc_macro_attribute]
+            #[proc_macro]
             pub fn test(
-                _attr: ::proc_macro::TokenStream,
                 input: ::proc_macro::TokenStream
             ) -> ::proc_macro::TokenStream {
                 /// Docs

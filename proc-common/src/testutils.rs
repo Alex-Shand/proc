@@ -1,11 +1,20 @@
+//! Helpers for testing proc macros
+
 use std::collections::HashMap;
+use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use proc_macro2::TokenTree;
 
-#[derive(Debug)]
+/// Wrapper for `proc_macro2::TokenStream` that implements `PartialEq`
 pub struct TokenStream(pub proc_macro2::TokenStream);
+
+impl fmt::Debug for TokenStream {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl PartialEq for TokenStream {
     fn eq(&self, rhs: &Self) -> bool {
@@ -48,20 +57,18 @@ pub fn check_expansion<
             if ext != "rs" {
                 continue;
             }
-        } else {
-            continue;
-        }
-        let stem = path.file_stem().unwrap().to_str().unwrap();
-        let (key, is_expanded) = if stem.ends_with(".expanded") {
-            (stem.rsplit_once('.').unwrap().0, true)
-        } else {
-            (stem, false)
-        };
-        let entry = tests.entry(key.to_owned()).or_insert((None, None));
-        if is_expanded {
-            entry.1 = Some(path);
-        } else {
-            entry.0 = Some(path);
+            let stem = path.file_stem().unwrap().to_str().unwrap();
+            let (key, is_expanded) = if stem.ends_with(".expanded") {
+                (stem.rsplit_once('.').unwrap().0, true)
+            } else {
+                (stem, false)
+            };
+            let entry = tests.entry(key.to_owned()).or_insert((None, None));
+            if is_expanded {
+                entry.1 = Some(path);
+            } else {
+                entry.0 = Some(path);
+            }
         }
     }
     for test in tests {
