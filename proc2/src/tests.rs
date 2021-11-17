@@ -131,7 +131,8 @@ pub(super) fn get_expansion_tests(path: &Path) -> Result<Vec<(Ident, String, Str
     let mut completed_tests = Vec::new();
     for (name, (input, output)) in tests {
         let input = input.ok_or_else(|| missing_file_error(name.clone(), "input"))?;
-        let output = output.ok_or_else(|| missing_file_error(name.clone(), "output"))?;
+        let output =
+            output.ok_or_else(|| missing_file_error(format!("{}.expanded", name), "output"))?;
         completed_tests.push((Ident::new(&name, Span::call_site()), input, output));
     }
     Ok(completed_tests)
