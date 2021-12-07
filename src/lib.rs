@@ -75,3 +75,25 @@ pub mod testutils {
 pub mod parseutils {
     pub use proc_common::keywords;
 }
+
+macro_rules! tests {
+    ($($macro:ident),*) => {
+        #[cfg(test)]
+        mod tests {
+            $(
+                #[test]
+                fn $macro() {
+                    let t = trybuild::TestCases::new();
+                    t.pass(concat!("test/", stringify!($macro), "/pass/*.rs"));
+                    t.compile_fail(concat!("test/", stringify!($macro), "/fail/*.rs"));
+                }
+            )*
+        }
+    }
+}
+
+tests!{
+    attribute,
+    function,
+    tests
+}

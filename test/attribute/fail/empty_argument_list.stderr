@@ -1,0 +1,5 @@
+error: The attribute function should have one argument
+ --> test/attribute/fail/empty_argument_list.rs:2:1
+  |
+2 | fn test() -> proc::TokenStream {
+  | ^^

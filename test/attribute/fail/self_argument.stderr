@@ -1,0 +1,5 @@
+error: The attribute function should be free standing
+ --> test/attribute/fail/self_argument.rs:5:5
+  |
+5 |     fn test(self) -> proc::TokenStream {
+  |     ^^
