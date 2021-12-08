@@ -13,7 +13,7 @@
 #![deny(unused_results)]
 #![deny(missing_debug_implementations)]
 #![deny(missing_copy_implementations)]
-//#![deny(dead_code)]
+#![deny(dead_code)]
 #![warn(clippy::pedantic)]
 
 use proc_macro2::TokenStream;
@@ -55,7 +55,7 @@ fn function(input: ItemFn) -> TokenStream {
 }
 
 syntax_abuse::tests! {
-    use proc_common::{q, compile_error, testutils::TokenStream};
+    use proc_common::{q, testutils::TokenStream};
 
     fn function(input: TokenStream) -> TokenStream {
         __function(input.0).unwrap()
@@ -64,89 +64,9 @@ syntax_abuse::tests! {
     testcase! {
         success,
         function(q! {
-            fn test(input: Type) -> TokenStream {
-                do_something_with(input)
-            }
-        }),
-        q! {
-            #[proc_macro]
-            pub fn test(
-                input: ::proc_macro::TokenStream
-            ) -> ::proc_macro::TokenStream {
-                fn test(input: Type) -> TokenStream {
-                    do_something_with(input)
-                }
-                ::std::convert::Into::into(
-                    test(self::syn::parse_macro_input!(input))
-                )
-            }
-
-            #[cfg(test)]
-            fn __test(
-                input: self::TokenStream
-            ) -> ::std::result::Result<self::testutils::TokenStream, ::std::string::String> {
-                fn test(input: Type) -> TokenStream {
-                    do_something_with(input)
-                }
-                ::std::result::Result::Ok(
-                    self::testutils::TokenStream(
-                        test(self::syn::parse2(input).map_err(|e| e.to_string())?)
-                    )
-                )
-            }
-        }
-    }
-
-    testcase! {
-        empty_argument_list,
-        function(q! {
-            fn test() -> TokenStream {
-            }
-        }),
-        compile_error!("The macro function should have one argument")
-    }
-
-    testcase! {
-        more_than_one_argument,
-        function(q! {
-            fn test(first: Type, second: Type) -> TokenStream {
-            }
-        }),
-        compile_error!("The macro function should have one argument")
-    }
-
-    testcase! {
-        self_argument,
-        function(q! {
-            fn test(self) -> TokenStream {
-            }
-        }),
-        compile_error!("The macro function should be free standing")
-    }
-
-    testcase! {
-        ref_self_argument,
-        function(q! {
-            fn test(&self) -> TokenStream {
-            }
-        }),
-        compile_error!("The macro function should be free standing")
-    }
-
-    testcase! {
-        mut_ref_self_argument,
-        function(q! {
-            fn test(&mut self) -> TokenStream {
-            }
-        }),
-        compile_error!("The macro function should be free standing")
-    }
-
-    testcase! {
-        docs,
-        function(q! {
             /// Docs
-            fn test(input: Input) -> TokenStream {
+            fn test(_input: Input) -> proc::TokenStream {
+                todo!()
             }
         }),
         q! {
@@ -156,7 +76,8 @@ syntax_abuse::tests! {
                 input: ::proc_macro::TokenStream
             ) -> ::proc_macro::TokenStream {
                 /// Docs
-                fn test(input: Input) -> TokenStream {
+                fn test(_input: Input) -> proc::TokenStream {
+                    todo!()
                 }
                 ::std::convert::Into::into(
                     test(self::syn::parse_macro_input!(input))
@@ -168,7 +89,8 @@ syntax_abuse::tests! {
                 input: self::TokenStream
             ) -> ::std::result::Result<self::testutils::TokenStream, ::std::string::String> {
                 /// Docs
-                fn test(input: Input) -> TokenStream {
+                fn test(_input: Input) -> proc::TokenStream {
+                    todo!()
                 }
                 ::std::result::Result::Ok(
                     self::testutils::TokenStream(

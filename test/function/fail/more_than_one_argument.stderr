@@ -1,0 +1,5 @@
+error: The macro function should have one argument
+ --> test/function/fail/more_than_one_argument.rs:2:1
+  |
+2 | fn test(_first: (), _second: ()) -> proc::TokenStream {
+  | ^^

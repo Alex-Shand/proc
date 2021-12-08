@@ -4,15 +4,12 @@ use proc::{syn, testutils, TokenStream};
 struct Input;
 
 impl syn::parse::Parse for Input {
-    fn parse(_: &syn::parse::ParseBuffer<'_>) -> syn::Result<Self> {
-        todo!()
-    }
+    fn parse(_: syn::parse::ParseStream<'_>) -> syn::Result<Self> { todo!() }
 }
 
 /// Docs
-//#[proc_macro_attribute]
+//#[proc_macro]
 pub fn test(
-    _attr: ::proc_macro::TokenStream,
     input: ::proc_macro::TokenStream
 ) -> ::proc_macro::TokenStream {
     /// Docs

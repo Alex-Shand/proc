@@ -1,0 +1,5 @@
+error: The macro function should be free standing
+ --> test/function/fail/ref_self_argument.rs:5:5
+  |
+5 |     fn test(&self) -> proc::TokenStream {
+  |     ^^
