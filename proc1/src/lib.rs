@@ -18,7 +18,7 @@
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::ItemFn;
+use syn::{ItemFn, Visibility};
 
 proc_common::proc_internal_hack! {}
 use proc_common::procutils::parse_macro_processor;
@@ -32,11 +32,14 @@ fn function(input: ItemFn) -> TokenStream {
         Err(tokens) => return tokens,
     };
 
+    let mut internal = input.clone();
+    internal.vis = Visibility::Inherited;
+
     quote! {
         #(#docs)*
         #[proc_macro]
         pub fn #name(input: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
-            #input
+            #internal
             ::std::convert::Into::into(#name(#proc::syn::parse_macro_input!(input)))
         }
 
@@ -44,7 +47,7 @@ fn function(input: ItemFn) -> TokenStream {
         fn #test_name(
             input: #proc::TokenStream
         ) -> ::std::result::Result<#proc::testutils::TokenStream, ::std::string::String> {
-            #input
+            #internal
             ::std::result::Result::Ok(
                 #proc::testutils::TokenStream(
                     #name(#proc::syn::parse2(input).map_err(|e| e.to_string())?)
