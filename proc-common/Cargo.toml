@@ -7,7 +7,7 @@ edition = "2018"
 
 [dependencies]
 proc-macro2 = "1.0.32"
-syn = { version = "1.0.81", features = [ "full", "extra-traits" ] }
+syn = { version = "2.0.5", features = [ "full", "extra-traits" ] }
 quote = "1.0.10"
 proc-macro-crate = "1.1.0"
 trybuild = "1.0.52"
