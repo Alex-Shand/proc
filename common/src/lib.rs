@@ -18,14 +18,15 @@
 #![allow(clippy::similar_names)]
 
 pub use proc_macro2;
+use proc_macro2::TokenStream;
 use proc_macro_crate::FoundCrate;
 pub use quote;
+use quote::ToTokens;
 pub use syn;
+use syn::Result;
 
-///
-/// # Errors
-///
-pub fn get_crate(name: &'static str) -> syn::Result<syn::Path> {
+#[doc(hidden)]
+pub fn get_crate(name: &'static str) -> Result<syn::Path> {
     match proc_macro_crate::crate_name(name) {
         Ok(FoundCrate::Itself) => Ok(syn::parse_quote!(crate)),
         Ok(FoundCrate::Name(name)) => {
@@ -33,5 +34,17 @@ pub fn get_crate(name: &'static str) -> syn::Result<syn::Path> {
             Ok(syn::parse_quote!(::#ident))
         }
         Err(e) => Err(syn::Error::new(proc_macro2::Span::call_site(), e)),
+    }
+}
+
+#[doc(hidden)]
+#[expect(clippy::inline_always)]
+#[inline(always)]
+pub fn proc_attribute_function_must_return_proc_result<T: ToTokens>(
+    result: Result<T>,
+) -> TokenStream {
+    match result {
+        Ok(result) => quote::quote!(#result),
+        Err(e) => e.into_compile_error(),
     }
 }

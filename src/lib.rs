@@ -18,4 +18,9 @@
 #![allow(clippy::similar_names)]
 
 pub use attribute::attribute;
-pub use common::{proc_macro2::TokenStream, quote, syn};
+pub use common::{
+    proc_attribute_function_must_return_proc_result, proc_macro2::TokenStream,
+    syn::Result,
+};
+#[doc(hidden)]
+pub use common::{quote, syn};

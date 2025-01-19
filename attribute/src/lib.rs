@@ -91,15 +91,14 @@ impl ToTokens for AttributeMacro {
         let name = self.name();
         let attrs = self.attrs();
         let logic = &self.logic;
-        let hash = quote!(#);
         tokens.extend(quote! {
             #(#attrs)*
             #[proc_macro_attribute]
             pub fn #name(_: ::proc_macro::TokenStream, item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
                 #[allow(unreachable_pub)]
+                #[allow(unnecessary_wraps)]
                 #logic
-                let result = #name(#crate_::syn::parse_macro_input!(item));
-                #crate_::quote::quote!(#hash result).into()
+                #crate_::proc_attribute_function_must_return_proc_result(#name(#crate_::syn::parse_macro_input!(item))).into()
             }
         });
     }
