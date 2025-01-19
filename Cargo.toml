@@ -1,0 +1,11 @@
+[package]
+name = "proc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+attribute = { version = "0.1.0", path = "attribute" }
+common = { version = "0.1.0", path = "common" }
+
+[workspace]
+members = ["attribute", "common"]
