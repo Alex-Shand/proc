@@ -24,37 +24,17 @@ use common::{
     syn,
 };
 
-#[derive(Default)]
-struct Args {
-    crate_: Option<syn::Path>,
-}
-
-impl Args {
-    fn parse(
-        &mut self,
-        meta: &syn::meta::ParseNestedMeta<'_>,
-    ) -> syn::Result<()> {
-        if meta.path.is_ident("crate") {
-            self.crate_ = Some(meta.value()?.parse()?);
-            return Ok(());
-        }
-        Err(meta.error("unsupported argument"))
-    }
-}
-
 /// Wrapper macro for defining attribute macros
 #[proc_macro_attribute]
 pub fn attribute(
     args: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let args = {
-        let mut parsed = Args::default();
-        let parser = syn::meta::parser(|meta| parsed.parse(&meta));
-        syn::parse_macro_input!(args with parser);
-        parsed
+    let crate_ = match common::parse_attribute_args(args.into()) {
+        Ok(result) => result,
+        Err(e) => return e.into_compile_error().into(),
     };
-    let result = AttributeMacro::new(args, syn::parse_macro_input!(item));
+    let result = AttributeMacro::new(crate_, syn::parse_macro_input!(item));
     match result {
         Ok(result) => quote!(#result).into(),
         Err(e) => e.into_compile_error().into(),
@@ -67,7 +47,7 @@ struct AttributeMacro {
 }
 
 impl AttributeMacro {
-    fn new(Args { crate_ }: Args, logic: syn::ItemFn) -> syn::Result<Self> {
+    fn new(crate_: Option<syn::Path>, logic: syn::ItemFn) -> syn::Result<Self> {
         let crate_ = if let Some(crate_) = crate_ {
             crate_
         } else {
@@ -94,11 +74,25 @@ impl ToTokens for AttributeMacro {
         tokens.extend(quote! {
             #(#attrs)*
             #[proc_macro_attribute]
-            pub fn #name(_: ::proc_macro::TokenStream, item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
+            pub fn #name(args: ::proc_macro::TokenStream, item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
                 #[allow(unreachable_pub)]
                 #[allow(unnecessary_wraps)]
                 #logic
-                #crate_::proc_attribute_function_must_return_proc_result(#name(#crate_::syn::parse_macro_input!(item))).into()
+                let crate_ = match #crate_::parse_attribute_args(args.into()) {
+                    Ok(result) => result,
+                    Err(e) => return e.into_compile_error().into()
+                };
+                let crate_ = if let Some(crate_) = crate_ {
+                    crate_
+                } else {
+                    match #crate_::get_crate(::std::module_path!()) {
+                        Ok(c) => c,
+                        Err(e) => return e.into_compile_error().into()
+                    }
+                };
+                #crate_::proc_attribute_function_must_return_proc_result(
+                    #name(crate_, #crate_::syn::parse_macro_input!(item)
+                )).into()
             }
         });
     }
