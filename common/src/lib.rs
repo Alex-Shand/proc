@@ -25,6 +25,9 @@ use quote::ToTokens;
 pub use syn;
 use syn::{parse::Parser, Result};
 
+/// Macro meta-argument parsing
+pub mod meta;
+
 #[doc(hidden)]
 pub fn get_crate(name: &'static str) -> Result<syn::Path> {
     match proc_macro_crate::crate_name(name) {
