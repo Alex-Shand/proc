@@ -1,10 +1,11 @@
 use proc_macro2::TokenStream;
 use syn::{parse::Parser as _, Result};
 
-pub use self::{optional::Optional, required::Required};
+pub use self::{optional::Optional, required::Required, switch::Switch};
 
 mod optional;
 mod required;
+mod switch;
 mod tuple;
 
 /// For meta argument parsing

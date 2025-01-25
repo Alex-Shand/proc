@@ -22,8 +22,15 @@ use common::{
     meta::{self, Meta as _},
     proc_macro2::TokenStream,
     quote::{quote, ToTokens},
-    syn,
+    syn::{self, ItemFn, LitStr, Path, Result},
 };
+
+use self::{arg_parser::ArgumentParser, arg_spec::ArgSpec, invoke::Invoke};
+
+mod arg_parser;
+mod arg_spec;
+mod argument;
+mod invoke;
 
 /// Wrapper macro for defining attribute macros
 #[proc_macro_attribute]
@@ -45,59 +52,54 @@ pub fn attribute(
 }
 
 struct AttributeMacro {
-    crate_: syn::Path,
-    host: Option<syn::LitStr>,
-    logic: syn::ItemFn,
+    crate_: Path,
+    arg_spec: ArgSpec,
+    logic: ItemFn,
 }
 
 impl AttributeMacro {
     fn new(
-        crate_: Option<syn::Path>,
-        host: Option<syn::LitStr>,
-        logic: syn::ItemFn,
-    ) -> syn::Result<Self> {
+        crate_: Option<Path>,
+        host: Option<LitStr>,
+        logic: ItemFn,
+    ) -> Result<Self> {
         let crate_ = if let Some(crate_) = crate_ {
             crate_
         } else {
             get_crate("proc")?
         };
+        let arg_spec = ArgSpec::new(&logic.sig, crate_.clone(), host)?;
         Ok(Self {
             crate_,
-            host,
+            arg_spec,
             logic,
         })
-    }
-
-    fn name(&self) -> &syn::Ident {
-        &self.logic.sig.ident
     }
 
     fn attrs(&self) -> &[syn::Attribute] {
         &self.logic.attrs
     }
 
+    fn name(&self) -> &syn::Ident {
+        &self.logic.sig.ident
+    }
+
     fn args(&self) -> ArgumentParser<'_> {
-        ArgumentParser {
-            crate_: &self.crate_,
-            host: &self.host,
-        }
+        ArgumentParser::new(&self.crate_, &self.arg_spec)
     }
 
     fn invoke(&self) -> Invoke<'_> {
-        Invoke {
-            crate_: &self.crate_,
-            name: self.name(),
-            extra_args: self.args().idents(),
-        }
+        Invoke::new(&self.crate_, self.name(), &self.arg_spec)
     }
 }
 
 impl ToTokens for AttributeMacro {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let crate_ = &self.crate_;
-        let name = self.name();
         let attrs = self.attrs();
-        let logic = &self.logic;
+        let name = self.name();
+        let arg_spec = &self.arg_spec;
+        let logic = arg_spec.patch_parsable_args(self.logic.clone());
         let args = self.args();
         let invoke = self.invoke();
         tokens.extend(quote! {
@@ -112,64 +114,6 @@ impl ToTokens for AttributeMacro {
                     #invoke
                 ).into()
             }
-        });
-    }
-}
-
-struct ArgumentParser<'a> {
-    crate_: &'a syn::Path,
-    host: &'a Option<syn::LitStr>,
-}
-
-impl ArgumentParser<'_> {
-    fn idents(&self) -> Vec<syn::Ident> {
-        let Self { host, .. } = self;
-        if host.is_some() {
-            return vec![syn::parse_quote!(crate_)];
-        }
-        Vec::new()
-    }
-}
-
-impl ToTokens for ArgumentParser<'_> {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let ArgumentParser { crate_, host } = self;
-        let Some(host) = host else {
-            return;
-        };
-        tokens.extend(quote! {
-            let arg_spec = #crate_::meta::Optional::new("crate");
-            let crate_ = match #crate_::meta::Meta::parse(arg_spec, args.into()) {
-                Ok(result) => result,
-                Err(e) => return e.into_compile_error().into()
-            };
-            let crate_ = if let Some(c) = crate_ {
-                c
-            } else {
-                match #crate_::get_crate(#host) {
-                    Ok(c) => c,
-                    Err(e) => return e.into_compile_error().into()
-                }
-            };
-        });
-    }
-}
-
-struct Invoke<'a> {
-    crate_: &'a syn::Path,
-    name: &'a syn::Ident,
-    extra_args: Vec<syn::Ident>,
-}
-
-impl ToTokens for Invoke<'_> {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let Invoke {
-            crate_,
-            name,
-            extra_args,
-        } = self;
-        tokens.extend(quote! {
-            #name(#(#extra_args,)* #crate_::syn::parse_macro_input!(item))
         });
     }
 }

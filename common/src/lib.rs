@@ -23,10 +23,23 @@ use proc_macro_crate::FoundCrate;
 pub use quote;
 use quote::ToTokens;
 pub use syn;
-use syn::{parse::Parser, Result};
+use syn::Result;
 
 /// Macro meta-argument parsing
 pub mod meta;
+
+/// .
+#[derive(Debug)]
+pub struct ResultFormatter<T: ToTokens>(pub Result<T>);
+
+impl<T: ToTokens> ToTokens for ResultFormatter<T> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match &self.0 {
+            Ok(result) => result.to_tokens(tokens),
+            Err(e) => tokens.extend(e.to_compile_error()),
+        }
+    }
+}
 
 #[doc(hidden)]
 pub fn get_crate(name: &'static str) -> Result<syn::Path> {
@@ -38,20 +51,6 @@ pub fn get_crate(name: &'static str) -> Result<syn::Path> {
         }
         Err(e) => Err(syn::Error::new(proc_macro2::Span::call_site(), e)),
     }
-}
-
-#[doc(hidden)]
-pub fn parse_attribute_args(tokens: TokenStream) -> Result<Option<syn::Path>> {
-    let mut crate_ = None;
-    let parser = syn::meta::parser(|meta| {
-        if meta.path.is_ident("crate") {
-            crate_ = Some(meta.value()?.parse()?);
-            return Ok(());
-        }
-        Err(meta.error("unrecognised argument"))
-    });
-    let () = parser.parse2(tokens)?;
-    Ok(crate_)
 }
 
 #[doc(hidden)]
