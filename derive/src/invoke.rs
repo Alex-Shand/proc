@@ -7,13 +7,19 @@ use common::{
 use crate::arg_spec::ArgSpec;
 
 pub(crate) struct Invoke<'a> {
+    item: &'a Ident,
     name: &'a Ident,
     extra_args: Vec<Ident>,
 }
 
 impl<'a> Invoke<'a> {
-    pub(crate) fn new(name: &'a Ident, arg_spec: &'a ArgSpec) -> Self {
+    pub(crate) fn new(
+        item: &'a Ident,
+        name: &'a Ident,
+        arg_spec: &'a ArgSpec,
+    ) -> Self {
         Self {
+            item,
             name,
             extra_args: arg_spec.idents().collect(),
         }
@@ -22,9 +28,13 @@ impl<'a> Invoke<'a> {
 
 impl ToTokens for Invoke<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let Invoke { name, extra_args } = self;
+        let Invoke {
+            item,
+            name,
+            extra_args,
+        } = self;
         tokens.extend(quote! {
-            #name(#(#extra_args,)* item)
+            #name(#(#extra_args,)* #item)
         });
     }
 }

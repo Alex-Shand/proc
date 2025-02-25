@@ -41,6 +41,12 @@ impl Argument {
         })
     }
 
+    ///.
+    #[must_use]
+    pub fn crate_ident() -> Ident {
+        format_ident!("crate_")
+    }
+
     /// .
     #[must_use]
     pub fn crate_(

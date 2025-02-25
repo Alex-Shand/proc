@@ -8,6 +8,8 @@ use crate::arg_spec::ArgSpec;
 
 pub(crate) struct ArgumentParser<'a> {
     crate_: &'a Path,
+    item: &'a Ident,
+    args: &'a Ident,
     attribute: &'a Ident,
     arg_spec: &'a ArgSpec,
 }
@@ -15,11 +17,15 @@ pub(crate) struct ArgumentParser<'a> {
 impl<'a> ArgumentParser<'a> {
     pub(crate) fn new(
         crate_: &'a Path,
+        item: &'a Ident,
+        args: &'a Ident,
         attribute: &'a Ident,
         arg_spec: &'a ArgSpec,
     ) -> Self {
         Self {
             crate_,
+            item,
+            args,
             attribute,
             arg_spec,
         }
@@ -29,12 +35,14 @@ impl<'a> ArgumentParser<'a> {
 impl ToTokens for ArgumentParser<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let crate_ = self.crate_;
+        let item = self.item;
+        let args = self.args;
         let attribute = self.attribute;
         let item_type = self.arg_spec.item_type();
         tokens.extend(quote! {
-            let item = #crate_::syn::parse_macro_input!(item as #item_type);
-            let (item, top_attributes) = #crate_::proc_derive_last_argument_must_implement_meta_derive_input(
-                item,
+            let #item = #crate_::syn::parse_macro_input!(#item as #item_type);
+            let (#item, #args) = #crate_::proc_derive_last_argument_must_implement_meta_derive_input(
+                #item,
                 stringify!(#attribute),
             );
         });
@@ -46,7 +54,7 @@ impl ToTokens for ArgumentParser<'_> {
         let crate_resolve = arg_spec.crate_resolve();
         tokens.extend(quote! {
             let arg_spec = #arg_spec;
-            let #matcher = match #crate_::meta::Meta::parse_attrs(arg_spec, &top_attributes[..]) {
+            let #matcher = match #crate_::meta::Meta::parse_attrs(arg_spec, &#args[..]) {
                 Ok(result) => result,
                 Err(e) => return e.into_compile_error().into()
             };

@@ -87,8 +87,9 @@ impl ArgSpec {
             return TokenStream::new();
         };
         let crate_ = &self.crate_;
+        let crate_ident = Argument::crate_ident();
         quote! {
-            let crate_ = if let Some(c) = crate_ {
+            let #crate_ident = if let Some(c) = #crate_ident {
                 c
             } else {
                 match #crate_::get_crate(#host) {

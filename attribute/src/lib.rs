@@ -21,8 +21,8 @@ use common::{
     get_crate,
     meta::{self, Meta as _},
     proc_macro2::TokenStream,
-    quote::{quote, ToTokens},
-    syn::{self, ItemFn, LitStr, Path, Result},
+    quote::{format_ident, quote, ToTokens},
+    syn::{self, Attribute, Ident, ItemFn, LitStr, Path, Result},
 };
 
 use self::{arg_parser::ArgumentParser, arg_spec::ArgSpec, invoke::Invoke};
@@ -52,6 +52,8 @@ pub fn attribute(
 
 struct AttributeMacro {
     crate_: Path,
+    args: Ident,
+    item: Ident,
     arg_spec: ArgSpec,
     logic: ItemFn,
 }
@@ -70,45 +72,49 @@ impl AttributeMacro {
         let arg_spec = ArgSpec::new(&logic.sig, crate_.clone(), host)?;
         Ok(Self {
             crate_,
+            args: format_ident!("__proc_internal_args"),
+            item: format_ident!("__proc_internal_item"),
             arg_spec,
             logic,
         })
     }
 
-    fn attrs(&self) -> &[syn::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.logic.attrs
     }
 
-    fn name(&self) -> &syn::Ident {
+    fn name(&self) -> &Ident {
         &self.logic.sig.ident
     }
 
-    fn args(&self) -> ArgumentParser<'_> {
-        ArgumentParser::new(&self.crate_, &self.arg_spec)
+    fn arg_parser(&self) -> ArgumentParser<'_> {
+        ArgumentParser::new(&self.crate_, &self.args, &self.arg_spec)
     }
 
     fn invoke(&self) -> Invoke<'_> {
-        Invoke::new(&self.crate_, self.name(), &self.arg_spec)
+        Invoke::new(&self.crate_, &self.item, self.name(), &self.arg_spec)
     }
 }
 
 impl ToTokens for AttributeMacro {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let crate_ = &self.crate_;
+        let args = &self.args;
+        let item = &self.item;
         let attrs = self.attrs();
         let name = self.name();
         let logic = self.arg_spec.patch_parsable_args(self.logic.clone());
-        let args = self.args();
+        let arg_parser = self.arg_parser();
         let invoke = self.invoke();
         tokens.extend(quote! {
             #(#attrs)*
             #[proc_macro_attribute]
-            pub fn #name(args: ::proc_macro::TokenStream, item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
+            pub fn #name(#args: ::proc_macro::TokenStream, #item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
                 #[allow(unreachable_pub)]
                 #[allow(unnecessary_wraps)]
                 #[allow(clippy::needless_pass_by_value)]
                 #logic
-                #args
+                #arg_parser
                 #crate_::proc_attribute_function_must_return_proc_result(
                     #invoke
                 ).into()

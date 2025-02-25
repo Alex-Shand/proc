@@ -8,6 +8,7 @@ use crate::arg_spec::ArgSpec;
 
 pub(crate) struct Invoke<'a> {
     crate_: &'a Path,
+    item: &'a Ident,
     name: &'a Ident,
     extra_args: Vec<Ident>,
 }
@@ -15,11 +16,13 @@ pub(crate) struct Invoke<'a> {
 impl<'a> Invoke<'a> {
     pub(crate) fn new(
         crate_: &'a Path,
+        item: &'a Ident,
         name: &'a Ident,
         arg_spec: &'a ArgSpec,
     ) -> Self {
         Self {
             crate_,
+            item,
             name,
             extra_args: arg_spec.idents().collect(),
         }
@@ -30,11 +33,12 @@ impl ToTokens for Invoke<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let Invoke {
             crate_,
+            item,
             name,
             extra_args,
         } = self;
         tokens.extend(quote! {
-            #name(#(#extra_args,)* #crate_::syn::parse_macro_input!(item))
+            #name(#(#extra_args,)* #crate_::syn::parse_macro_input!(#item))
         });
     }
 }

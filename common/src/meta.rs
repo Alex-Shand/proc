@@ -1,5 +1,3 @@
-use std::mem;
-
 use proc_macro2::TokenStream;
 use syn::{parse::Parser as _, Attribute, Result};
 
@@ -42,8 +40,19 @@ pub trait Meta: Sized {
         self.validate()
     }
 
+    ///
+    /// # Errors
+    ///
     fn parse_attrs(mut self, attrs: &[Attribute]) -> Result<Self::Item> {
-        todo!()
+        for attr in attrs {
+            attr.parse_nested_meta(|meta| {
+                if self.parse_impl(&meta)? {
+                    return Ok(());
+                }
+                Err(meta.error("unrecognised argument"))
+            })?;
+        }
+        self.validate()
     }
 }
 

@@ -17,7 +17,6 @@
 #![allow(clippy::let_underscore_untyped)]
 #![allow(clippy::similar_names)]
 
-use arg_parser::ArgumentParser;
 use common::{
     meta::{Optional, Required},
     proc_macro2::TokenStream,
@@ -26,7 +25,7 @@ use common::{
 };
 use convert_case::{Case, Casing as _};
 
-use self::{arg_spec::ArgSpec, invoke::Invoke};
+use self::{arg_parser::ArgumentParser, arg_spec::ArgSpec, invoke::Invoke};
 
 mod arg_parser;
 mod arg_spec;
@@ -51,6 +50,8 @@ pub fn derive(
 
 struct DeriveMacro {
     crate_: Path,
+    args: Ident,
+    item: Ident,
     name: Ident,
     attribute: Ident,
     arg_spec: ArgSpec,
@@ -68,6 +69,8 @@ impl DeriveMacro {
         let arg_spec = ArgSpec::new(&logic.sig, crate_.clone(), host)?;
         Ok(Self {
             crate_,
+            args: format_ident!("__proc_internal_args"),
+            item: format_ident!("__proc_internal_item"),
             name,
             attribute,
             arg_spec,
@@ -84,17 +87,24 @@ impl DeriveMacro {
     }
 
     fn args(&self) -> ArgumentParser<'_> {
-        ArgumentParser::new(&self.crate_, &self.attribute, &self.arg_spec)
+        ArgumentParser::new(
+            &self.crate_,
+            &self.item,
+            &self.args,
+            &self.attribute,
+            &self.arg_spec,
+        )
     }
 
     fn invoke(&self) -> Invoke<'_> {
-        Invoke::new(self.impl_name(), &self.arg_spec)
+        Invoke::new(&self.item, self.impl_name(), &self.arg_spec)
     }
 }
 
 impl ToTokens for DeriveMacro {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let crate_ = &self.crate_;
+        let item = &self.item;
         let attrs = self.attrs();
         let name = &self.name;
         let attribute = &self.attribute;
@@ -105,7 +115,7 @@ impl ToTokens for DeriveMacro {
         tokens.extend(quote! {
             #(#attrs)*
             #[proc_macro_derive(#name, attributes(#attribute))]
-            pub fn #impl_name(item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
+            pub fn #impl_name(#item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
                 #[allow(unreachable_pub)]
                 #[allow(unnecessary_wraps)]
                 #[allow(clippy::needless_pass_by_value)]
