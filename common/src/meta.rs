@@ -1,5 +1,7 @@
+use std::mem;
+
 use proc_macro2::TokenStream;
-use syn::{parse::Parser as _, Result};
+use syn::{parse::Parser as _, Attribute, Result};
 
 pub use self::{optional::Optional, required::Required, switch::Switch};
 
@@ -29,7 +31,7 @@ pub trait Meta: Sized {
     ///
     /// # Errors
     ///
-    fn parse(mut self, tokens: TokenStream) -> Result<Self::Item> {
+    fn parse_bare(mut self, tokens: TokenStream) -> Result<Self::Item> {
         let parser = syn::meta::parser(|meta| {
             if self.parse_impl(&meta)? {
                 return Ok(());
@@ -38,5 +40,29 @@ pub trait Meta: Sized {
         });
         let () = parser.parse2(tokens)?;
         self.validate()
+    }
+
+    fn parse_attrs(mut self, attrs: &[Attribute]) -> Result<Self::Item> {
+        todo!()
+    }
+}
+
+/// .
+pub trait DeriveInput: Sized {
+    /// .
+    fn skim_attributes(self, guard: &'static str) -> (Self, Vec<Attribute>);
+}
+
+impl DeriveInput for syn::DeriveInput {
+    fn skim_attributes(
+        mut self,
+        guard: &'static str,
+    ) -> (Self, Vec<Attribute>) {
+        let (our_attrs, rest) = self
+            .attrs
+            .into_iter()
+            .partition(|a| a.path().is_ident(guard));
+        self.attrs = rest;
+        (self, our_attrs)
     }
 }

@@ -1,4 +1,4 @@
-//! attribute
+//! derive
 #![warn(elided_lifetimes_in_paths)]
 #![warn(missing_docs)]
 #![warn(noop_method_call)]
@@ -17,59 +17,59 @@
 #![allow(clippy::let_underscore_untyped)]
 #![allow(clippy::similar_names)]
 
+use arg_parser::ArgumentParser;
 use common::{
-    get_crate,
-    meta::{self, Meta as _},
+    meta::{Optional, Required},
     proc_macro2::TokenStream,
-    quote::{quote, ToTokens},
-    syn::{self, ItemFn, LitStr, Path, Result},
+    quote::{format_ident, quote, ToTokens},
+    syn::{self, Ident, ItemFn, LitStr, Path, Result},
 };
+use convert_case::{Case, Casing as _};
 
-use self::{arg_parser::ArgumentParser, arg_spec::ArgSpec, invoke::Invoke};
+use self::{arg_spec::ArgSpec, invoke::Invoke};
 
 mod arg_parser;
 mod arg_spec;
 mod invoke;
 
-/// Wrapper macro for defining attribute macros
-#[proc_macro_attribute]
-pub fn attribute(
-    args: proc_macro::TokenStream,
-    item: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let arg_spec = (meta::Optional::new("crate"), meta::Optional::new("host"));
-    let (crate_, host) = match arg_spec.parse_bare(args.into()) {
-        Ok(result) => result,
-        Err(e) => return e.into_compile_error().into(),
+/// .
+#[attribute::attribute(crate = common, host = "proc")]
+pub fn derive(
+    crate_: Path,
+    name: Required<Ident>,
+    attribute: Optional<Ident>,
+    host: Optional<LitStr>,
+    item: ItemFn,
+) -> Result<DeriveMacro> {
+    let attribute = if let Some(attribute) = attribute {
+        attribute
+    } else {
+        format_ident!("{}", name.to_string().to_case(Case::Snake))
     };
-    let result =
-        AttributeMacro::new(crate_, host, syn::parse_macro_input!(item));
-    match result {
-        Ok(result) => quote!(#result).into(),
-        Err(e) => e.into_compile_error().into(),
-    }
+    DeriveMacro::new(crate_, name, attribute, host, item)
 }
 
-struct AttributeMacro {
+struct DeriveMacro {
     crate_: Path,
+    name: Ident,
+    attribute: Ident,
     arg_spec: ArgSpec,
     logic: ItemFn,
 }
 
-impl AttributeMacro {
+impl DeriveMacro {
     fn new(
-        crate_: Option<Path>,
+        crate_: Path,
+        name: Ident,
+        attribute: Ident,
         host: Option<LitStr>,
         logic: ItemFn,
     ) -> Result<Self> {
-        let crate_ = if let Some(crate_) = crate_ {
-            crate_
-        } else {
-            get_crate("proc")?
-        };
         let arg_spec = ArgSpec::new(&logic.sig, crate_.clone(), host)?;
         Ok(Self {
             crate_,
+            name,
+            attribute,
             arg_spec,
             logic,
         })
@@ -79,31 +79,33 @@ impl AttributeMacro {
         &self.logic.attrs
     }
 
-    fn name(&self) -> &syn::Ident {
+    fn impl_name(&self) -> &Ident {
         &self.logic.sig.ident
     }
 
     fn args(&self) -> ArgumentParser<'_> {
-        ArgumentParser::new(&self.crate_, &self.arg_spec)
+        ArgumentParser::new(&self.crate_, &self.attribute, &self.arg_spec)
     }
 
     fn invoke(&self) -> Invoke<'_> {
-        Invoke::new(&self.crate_, self.name(), &self.arg_spec)
+        Invoke::new(self.impl_name(), &self.arg_spec)
     }
 }
 
-impl ToTokens for AttributeMacro {
+impl ToTokens for DeriveMacro {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let crate_ = &self.crate_;
         let attrs = self.attrs();
-        let name = self.name();
+        let name = &self.name;
+        let attribute = &self.attribute;
+        let impl_name = self.impl_name();
         let logic = self.arg_spec.patch_parsable_args(self.logic.clone());
         let args = self.args();
         let invoke = self.invoke();
         tokens.extend(quote! {
             #(#attrs)*
-            #[proc_macro_attribute]
-            pub fn #name(args: ::proc_macro::TokenStream, item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
+            #[proc_macro_derive(#name, attributes(#attribute))]
+            pub fn #impl_name(item: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
                 #[allow(unreachable_pub)]
                 #[allow(unnecessary_wraps)]
                 #[allow(clippy::needless_pass_by_value)]

@@ -22,9 +22,11 @@ use proc_macro2::TokenStream;
 use proc_macro_crate::FoundCrate;
 pub use quote;
 use quote::ToTokens;
-pub use syn;
-use syn::Result;
+pub use syn::{self, Path};
+use syn::{Attribute, Result};
 
+/// .
+pub mod argument;
 /// Macro meta-argument parsing
 pub mod meta;
 
@@ -42,7 +44,7 @@ impl<T: ToTokens> ToTokens for ResultFormatter<T> {
 }
 
 #[doc(hidden)]
-pub fn get_crate(name: &'static str) -> Result<syn::Path> {
+pub fn get_crate(name: &'static str) -> Result<Path> {
     match proc_macro_crate::crate_name(name) {
         Ok(FoundCrate::Itself) => Ok(syn::parse_quote!(crate)),
         Ok(FoundCrate::Name(name)) => {
@@ -63,4 +65,16 @@ pub fn proc_attribute_function_must_return_proc_result<T: ToTokens>(
         Ok(result) => quote::quote!(#result),
         Err(e) => e.into_compile_error(),
     }
+}
+
+#[doc(hidden)]
+#[expect(clippy::inline_always)]
+#[inline(always)]
+pub fn proc_derive_last_argument_must_implement_meta_derive_input<
+    D: meta::DeriveInput,
+>(
+    derive_input: D,
+    guard: &'static str,
+) -> (D, Vec<Attribute>) {
+    derive_input.skim_attributes(guard)
 }

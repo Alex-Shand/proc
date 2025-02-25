@@ -6,7 +6,7 @@ use common::{
     quote::{quote, ToTokens},
     syn::{
         self, Error, FnArg, Ident, ItemFn, LitStr, PatType, Path, Result,
-        Signature,
+        Signature, Type,
     },
 };
 
@@ -14,6 +14,7 @@ pub(crate) struct ArgSpec {
     crate_: Path,
     host: Option<LitStr>,
     args: Vec<Argument>,
+    item_type: Type,
 }
 
 impl ArgSpec {
@@ -26,38 +27,57 @@ impl ArgSpec {
         if let Some(a @ FnArg::Receiver(_)) = inputs.first() {
             return Err(Error::new_spanned(
                 a,
-                "proc::attribute cannot be applied to receiver methods",
+                "proc::derive cannot be applied to receiver methods",
             ));
-        }
+        };
 
         // If host was passed to the macro then the first argument is reserved
         // for the injected crate. The last argument is always the item. Any
         // others have to be parsed
-        let args = match (&host, &inputs[..]) {
-            (Some(_), [c, args @ .., _]) => iter::once(Ok(Argument::crate_(
-                extract_arg(c),
-                &crate_,
-            )))
-            .chain(
+        let (args, item) = match (&host, &inputs[..]) {
+            (Some(_), [c, args @ .., item]) => (
+                iter::once(Ok(Argument::crate_(extract_arg(c), &crate_)))
+                    .chain(
+                        args.iter()
+                            .copied()
+                            .map(|a| Argument::new(extract_arg(a), &crate_)),
+                    )
+                    .collect::<Result<_>>()?,
+                *item,
+            ),
+            (None, [args @ .., item]) => (
                 args.iter()
                     .copied()
-                    .map(|a| Argument::new(extract_arg(a), &crate_)),
-            )
-            .collect::<Result<_>>()?,
-            (None, [args @ .., _]) => args
-                .iter()
-                .copied()
-                .map(|a| Argument::new(extract_arg(a), &crate_))
-                .collect::<Result<_>>()?,
-            (_, []) => return Err(Error::new_spanned(sig, "proc::attribute logic function must have at least one argument")),
-            (Some(_), [_]) => return Err(Error::new_spanned(sig, "proc::attribute function must have two arguments if host is used")),
+                    .map(|a| Argument::new(extract_arg(a), &crate_))
+                    .collect::<Result<_>>()?,
+                *item,
+            ),
+            (_, []) => return Err(Error::new_spanned(
+                sig,
+                "proc::derive logic function must have at least one argument",
+            )),
+            (Some(_), [_]) => return Err(Error::new_spanned(
+                sig,
+                "proc::derive function must have two arguments if host is used",
+            )),
         };
 
-        Ok(ArgSpec { crate_, host, args })
+        let item_type = (*extract_arg(item).ty).clone();
+
+        Ok(Self {
+            crate_,
+            host,
+            args,
+            item_type,
+        })
     }
 
     pub(crate) fn is_empty(&self) -> bool {
         self.args.is_empty()
+    }
+
+    pub(crate) fn item_type(&self) -> &Type {
+        &self.item_type
     }
 
     pub(crate) fn patch_parsable_args(&self, mut function: ItemFn) -> ItemFn {

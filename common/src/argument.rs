@@ -1,11 +1,10 @@
-use common::{
-    proc_macro2::TokenStream,
-    quote::{format_ident, quote},
-    syn::{self, Attribute, Error, Ident, Pat, PatType, Path, Result, Type},
-};
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
+use syn::{self, Attribute, Error, Ident, Pat, PatType, Path, Result, Type};
 
+/// .
 #[derive(Debug, Clone)]
-pub(crate) struct Argument {
+pub struct Argument {
     attrs: Vec<Attribute>,
     name: String,
     meta_name: String,
@@ -15,7 +14,10 @@ pub(crate) struct Argument {
 }
 
 impl Argument {
-    pub(crate) fn new(
+    ///
+    /// # Errors
+    ///
+    pub fn new(
         PatType { attrs, pat, ty, .. }: &PatType,
         crate_: &Path,
     ) -> Result<Self> {
@@ -39,7 +41,9 @@ impl Argument {
         })
     }
 
-    pub(crate) fn crate_(
+    /// .
+    #[must_use]
+    pub fn crate_(
         PatType { attrs, pat, ty, .. }: &PatType,
         crate_: &Path,
     ) -> Self {
@@ -53,7 +57,9 @@ impl Argument {
         }
     }
 
-    pub(crate) fn as_logic_argument(&self) -> TokenStream {
+    /// .
+    #[must_use]
+    pub fn as_logic_argument(&self) -> TokenStream {
         let Argument {
             attrs,
             name: _,
@@ -65,7 +71,9 @@ impl Argument {
         quote!(#(#attrs)* #pat: #typ)
     }
 
-    pub(crate) fn as_parser_object(&self) -> TokenStream {
+    /// .
+    #[must_use]
+    pub fn as_parser_object(&self) -> TokenStream {
         let Argument {
             meta_name,
             arg_spec,
@@ -74,7 +82,9 @@ impl Argument {
         quote!(<#arg_spec>::new(#meta_name))
     }
 
-    pub(crate) fn ident(&self) -> Ident {
+    /// .
+    #[must_use]
+    pub fn ident(&self) -> Ident {
         format_ident!("{}", self.name)
     }
 }

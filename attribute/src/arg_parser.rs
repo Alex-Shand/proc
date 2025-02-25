@@ -24,11 +24,11 @@ impl ToTokens for ArgumentParser<'_> {
         }
         let crate_ = self.crate_;
         let arg_spec = self.arg_spec;
-        let matcher = self.arg_spec.matcher();
-        let crate_resolve = self.arg_spec.crate_resolve();
+        let matcher = arg_spec.matcher();
+        let crate_resolve = arg_spec.crate_resolve();
         tokens.extend(quote! {
             let arg_spec = #arg_spec;
-            let #matcher = match #crate_::meta::Meta::parse(arg_spec, args.into()) {
+            let #matcher = match #crate_::meta::Meta::parse_bare(arg_spec, args.into()) {
                 Ok(result) => result,
                 Err(e) => return e.into_compile_error().into()
             };
