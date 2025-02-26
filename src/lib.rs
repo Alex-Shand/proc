@@ -26,3 +26,4 @@ pub use common::{
     syn::{DeriveInput, ItemEnum, ItemStruct, Path, Result},
 };
 pub use derive::derive;
+pub use parse::Parse;
