@@ -1,0 +1,5 @@
+error: #[derive(Parse)] cannot be used on unions
+ --> tests/ui/unions.rs:3:1
+  |
+3 | union Union {
+  | ^^^^^

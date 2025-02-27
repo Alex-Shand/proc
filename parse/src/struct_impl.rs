@@ -69,7 +69,7 @@ impl ToTokens for ParseBody<'_> {
                     quote!(#name: input.parse()?)
                 });
                 tokens.extend(quote! {
-                    Ok(Self { #(#fields),* })
+                    Ok(Self { #(#fields),*})
                 });
             }
         }

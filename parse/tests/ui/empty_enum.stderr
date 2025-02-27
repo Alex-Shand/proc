@@ -1,0 +1,5 @@
+error: cannot #[derive(Parse)] on an empty enum
+ --> tests/ui/empty_enum.rs:3:6
+  |
+3 | enum Void {}
+  |      ^^^^

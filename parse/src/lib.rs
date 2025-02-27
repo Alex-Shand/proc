@@ -18,6 +18,7 @@
 #![allow(clippy::similar_names)]
 
 use common::{
+    meta::Optional,
     proc_macro2::TokenStream,
     quote::ToTokens,
     syn::{Data, DeriveInput, Error, Path, Result},
@@ -30,7 +31,12 @@ mod struct_impl;
 
 /// .
 #[derive::derive(crate = common, host = "proc", name = Parse)]
-pub fn derive(crate_: Path, item: DeriveInput) -> Result<ParseImpl> {
+pub fn derive(
+    crate_: Path,
+    __internal_proc_hack: Optional<Path>,
+    item: DeriveInput,
+) -> Result<ParseImpl> {
+    let parse = __internal_proc_hack.unwrap_or_else(|| crate_.clone());
     if item.generics.params.iter().next().is_some() {
         return Err(Error::new_spanned(
             item.generics,
@@ -42,7 +48,7 @@ pub fn derive(crate_: Path, item: DeriveInput) -> Result<ParseImpl> {
             ParseImpl::Struct(StructImpl::new(crate_, item.ident, data))
         }
         Data::Enum(data) => {
-            ParseImpl::Enum(EnumImpl::new(crate_, item.ident, data)?)
+            ParseImpl::Enum(EnumImpl::new(crate_, parse, item.ident, data)?)
         }
         Data::Union(data) => {
             return Err(Error::new_spanned(
@@ -64,5 +70,13 @@ impl ToTokens for ParseImpl {
             ParseImpl::Struct(s) => s.to_tokens(tokens),
             ParseImpl::Enum(e) => e.to_tokens(tokens),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn ui() {
+        trybuild::TestCases::new().compile_fail("tests/ui/*.rs");
     }
 }

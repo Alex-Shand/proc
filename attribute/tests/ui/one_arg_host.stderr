@@ -1,0 +1,5 @@
+error: proc::attribute function must have two arguments if host is used
+ --> tests/ui/one_arg_host.rs:2:8
+  |
+2 | pub fn test(item: InputType) -> Result<OutputType> {
+  |        ^^^^

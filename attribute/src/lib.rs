@@ -122,3 +122,16 @@ impl ToTokens for AttributeMacro {
         });
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn expand() {
+        macrotest::expand("tests/expand/*.rs");
+    }
+
+    #[test]
+    fn ui() {
+        trybuild::TestCases::new().compile_fail("tests/ui/*.rs");
+    }
+}

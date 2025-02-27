@@ -10,6 +10,7 @@ pub(crate) struct ArgumentParser<'a> {
     crate_: &'a Path,
     item: &'a Ident,
     args: &'a Ident,
+    name: &'a Ident,
     attribute: &'a Ident,
     arg_spec: &'a ArgSpec,
 }
@@ -19,6 +20,7 @@ impl<'a> ArgumentParser<'a> {
         crate_: &'a Path,
         item: &'a Ident,
         args: &'a Ident,
+        name: &'a Ident,
         attribute: &'a Ident,
         arg_spec: &'a ArgSpec,
     ) -> Self {
@@ -26,6 +28,7 @@ impl<'a> ArgumentParser<'a> {
             crate_,
             item,
             args,
+            name,
             attribute,
             arg_spec,
         }
@@ -37,6 +40,7 @@ impl ToTokens for ArgumentParser<'_> {
         let crate_ = self.crate_;
         let item = self.item;
         let args = self.args;
+        let name = self.name;
         let attribute = self.attribute;
         let item_type = self.arg_spec.item_type();
         tokens.extend(quote! {
@@ -47,7 +51,18 @@ impl ToTokens for ArgumentParser<'_> {
             );
         });
         if self.arg_spec.is_empty() {
-            return;
+            return tokens.extend(quote! {
+                if !#args.is_empty() {
+                    return #crate_::syn::Error::new_spanned(
+                        &#args[0],
+                        concat!(
+                            "#[derive(",
+                            stringify!(#name),
+                            ")] expects no item level attributes",
+                        ),
+                    ).into_compile_error().into();
+                }
+            });
         }
         let arg_spec = self.arg_spec;
         let matcher = arg_spec.matcher();

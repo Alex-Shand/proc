@@ -1,0 +1,5 @@
+error: proc::attribute cannot be applied to receiver methods
+ --> tests/ui/self_method.rs:5:17
+  |
+5 |     pub fn test(self, item: InputType) -> Result<OutputType> {
+  |                 ^^^^

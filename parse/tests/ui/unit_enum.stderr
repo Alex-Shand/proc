@@ -1,0 +1,5 @@
+error: unit enum variants cannot be parsed
+ --> tests/ui/unit_enum.rs:4:5
+  |
+4 |     Unit,
+  |     ^^^^

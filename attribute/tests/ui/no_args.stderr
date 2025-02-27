@@ -1,0 +1,5 @@
+error: proc::attribute logic function must have at least one argument
+ --> tests/ui/no_args.rs:2:8
+  |
+2 | pub fn test() -> Result<OutputType> {
+  |        ^^^^

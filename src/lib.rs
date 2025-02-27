@@ -19,7 +19,8 @@
 
 pub use attribute::attribute;
 pub use common::{
-    get_crate, meta, proc_attribute_function_must_return_proc_result,
+    ResultFormatter, get_crate, meta,
+    proc_attribute_function_must_return_proc_result,
     proc_derive_last_argument_must_implement_meta_derive_input,
     proc_macro2::TokenStream,
     quote, syn,

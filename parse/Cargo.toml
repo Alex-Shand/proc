@@ -9,3 +9,6 @@ proc-macro = true
 [dependencies]
 derive = { version = "0.1.0", path = "../derive" }
 common = { version = "0.1.0", path = "../common" }
+
+[dev-dependencies]
+trybuild = "1.0.103"

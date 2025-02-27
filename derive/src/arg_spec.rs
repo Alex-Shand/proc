@@ -53,11 +53,11 @@ impl ArgSpec {
                 *item,
             ),
             (_, []) => return Err(Error::new_spanned(
-                sig,
+                &sig.ident,
                 "proc::derive logic function must have at least one argument",
             )),
             (Some(_), [_]) => return Err(Error::new_spanned(
-                sig,
+                &sig.ident,
                 "proc::derive function must have two arguments if host is used",
             )),
         };

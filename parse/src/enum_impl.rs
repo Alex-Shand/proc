@@ -1,11 +1,13 @@
 use common::{
     proc_macro2::TokenStream,
     quote::{format_ident, quote, ToTokens},
-    syn::{DataEnum, Error, Fields, Ident, Path, Result, Variant},
+    syn::{self, DataEnum, Error, Expr, Fields, Ident, Path, Result, Variant},
+    ResultFormatter,
 };
 
 pub(crate) struct EnumImpl {
     crate_: Path,
+    parse: Path,
     name: Ident,
     variants: Vec<Variant>,
 }
@@ -13,6 +15,7 @@ pub(crate) struct EnumImpl {
 impl EnumImpl {
     pub(crate) fn new(
         crate_: Path,
+        parse: Path,
         name: Ident,
         data: DataEnum,
     ) -> Result<Self> {
@@ -25,13 +28,14 @@ impl EnumImpl {
         }
         Ok(Self {
             crate_,
+            parse,
             name,
             variants,
         })
     }
 
     fn parse_body(&self) -> ParseBody<'_> {
-        ParseBody::new(&self.crate_, &self.name, &self.variants)
+        ParseBody::new(&self.crate_, &self.parse, &self.name, &self.variants)
     }
 }
 
@@ -52,6 +56,7 @@ impl ToTokens for EnumImpl {
 
 struct ParseBody<'a> {
     crate_: &'a Path,
+    parse: &'a Path,
     self_type: &'a Ident,
     variants: &'a [Variant],
 }
@@ -59,11 +64,13 @@ struct ParseBody<'a> {
 impl<'a> ParseBody<'a> {
     fn new(
         crate_: &'a Path,
+        parse: &'a Path,
         self_type: &'a Ident,
         variants: &'a [Variant],
     ) -> Self {
         Self {
             crate_,
+            parse,
             self_type,
             variants,
         }
@@ -72,21 +79,23 @@ impl<'a> ParseBody<'a> {
 
 impl ToTokens for ParseBody<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let variant_structs = self
-            .variants
-            .iter()
-            .map(|v| VariantStruct::new(self.crate_, self.self_type, v));
-        let parsers = self.variants.iter().map(Parser);
+        let variant_structs = self.variants.iter().map(|v| {
+            VariantStruct::new(self.crate_, self.parse, self.self_type, v)
+        });
+        let parsers =
+            self.variants.iter().map(Parser::new).map(ResultFormatter);
         tokens.extend(quote! {
             #(#variant_structs)*
+            let lookahead = input.lookahead1();
             #(#parsers)*
-            return Err(_err);
+            return Err(lookahead.error());
         });
     }
 }
 
 struct VariantStruct<'a> {
     crate_: &'a Path,
+    parse: &'a Path,
     self_type: &'a Ident,
     variant: &'a Variant,
 }
@@ -94,14 +103,20 @@ struct VariantStruct<'a> {
 impl<'a> VariantStruct<'a> {
     fn new(
         crate_: &'a Path,
+        parse: &'a Path,
         self_type: &'a Ident,
         variant: &'a Variant,
     ) -> Self {
         Self {
             crate_,
+            parse,
             self_type,
             variant,
         }
+    }
+
+    fn struct_name(ident: &Ident) -> Ident {
+        format_ident!("__Proc_Internal_{ident}")
     }
 
     fn matcher(&self) -> Matcher<'_> {
@@ -112,16 +127,21 @@ impl<'a> VariantStruct<'a> {
 impl ToTokens for VariantStruct<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let crate_ = self.crate_;
+        let parse = self.parse;
         let self_type = self.self_type;
-        let ident = &self.variant.ident;
+        let variant = &self.variant.ident;
+        let ident = Self::struct_name(&self.variant.ident);
         let fields = &self.variant.fields;
         let matcher = self.matcher();
         tokens.extend(quote! {
-            #[derive(#crate_::Parse)] struct #ident #fields;
+            #[derive(#parse::Parse)]
+            #[parse(crate = #crate_)]
+            #[allow(non_camel_case_types)]
+            struct #ident #fields;
 
             impl From<#ident> for #self_type {
                 fn from(#ident #matcher: #ident) -> #self_type {
-                    #self_type::#ident #matcher
+                    #self_type::#variant #matcher
                 }
             }
         });
@@ -159,16 +179,41 @@ impl ToTokens for Matcher<'_> {
     }
 }
 
-struct Parser<'a>(&'a Variant);
+struct Parser<'a> {
+    matcher: Expr,
+    ident: &'a Ident,
+}
+
+impl<'a> Parser<'a> {
+    fn new(variant: &'a Variant) -> Result<Self> {
+        let err = || {
+            Error::new_spanned(
+                &variant.ident,
+                "unit enum variants cannot be parsed",
+            )
+        };
+        let matcher = match &variant.fields {
+            Fields::Named(fields) => &fields.named.first().ok_or_else(err)?.ty,
+            Fields::Unnamed(fields) => {
+                &fields.unnamed.first().ok_or_else(err)?.ty
+            }
+            Fields::Unit => return Err(err()),
+        };
+        Ok(Self {
+            matcher: syn::parse2(matcher.into_token_stream())?,
+            ident: &variant.ident,
+        })
+    }
+}
 
 impl ToTokens for Parser<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let ident = &self.0.ident;
+        let matcher = &self.matcher;
+        let ident = VariantStruct::struct_name(self.ident);
         tokens.extend(quote! {
-            let _err = match input.parse::<#ident>() {
-                Ok(result) => return Ok(result.into()),
-                Err(err) => err,
-            };
+            if lookahead.peek(#matcher) {
+                return Ok(input.parse::<#ident>()?.into())
+            }
         });
     }
 }

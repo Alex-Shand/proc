@@ -1,0 +1,5 @@
+error: unrecognised argument
+ --> tests/ui/unexpected_meta_arg.rs:1:40
+  |
+1 | #[attribute::attribute(crate = common, arg)]
+  |                                        ^^^

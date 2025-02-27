@@ -1,0 +1,5 @@
+error: unrecognised argument
+ --> tests/ui/unexpected_meta_arg.rs:2:51
+  |
+2 | #[derive::derive(crate = common, name = MyDerive, foo)]
+  |                                                   ^^^

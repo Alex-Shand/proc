@@ -1,0 +1,5 @@
+error: proc::derive logic function must have at least one argument
+ --> tests/ui/no_args.rs:3:8
+  |
+3 | pub fn derive() -> Result<OutputType> {
+  |        ^^^^^^

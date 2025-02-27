@@ -1,0 +1,5 @@
+error: proc::derive cannot be applied to receiver methods
+ --> tests/ui/mut_ref_self_method.rs:5:17
+  |
+5 |     pub fn test(&mut self, item: InputType) -> Result<OutputType> {
+  |                 ^^^^^^^^^

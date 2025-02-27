@@ -1,0 +1,5 @@
+error: unrecognised argument
+ --> tests/ui/unexpected_meta_arg.rs:3:9
+  |
+3 | #[parse(foo)]
+  |         ^^^

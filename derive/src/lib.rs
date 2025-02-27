@@ -91,6 +91,7 @@ impl DeriveMacro {
             &self.crate_,
             &self.item,
             &self.args,
+            &self.name,
             &self.attribute,
             &self.arg_spec,
         )
@@ -126,5 +127,18 @@ impl ToTokens for DeriveMacro {
                 ).into()
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn expand() {
+        macrotest::expand("tests/expand/*.rs");
+    }
+
+    #[test]
+    fn ui() {
+        trybuild::TestCases::new().compile_fail("tests/ui/*.rs");
     }
 }

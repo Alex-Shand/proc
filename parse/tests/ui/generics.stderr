@@ -1,0 +1,5 @@
+error: #[derive(Parse)] doesn't support generics
+ --> tests/ui/generics.rs:3:20
+  |
+3 | struct WithGenerics<T>(T);
+  |                    ^^^

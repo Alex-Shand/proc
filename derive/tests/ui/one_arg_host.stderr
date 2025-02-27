@@ -1,0 +1,5 @@
+error: proc::derive function must have two arguments if host is used
+ --> tests/ui/one_arg_host.rs:3:8
+  |
+3 | pub fn derive(item: InputType) -> Result<OutputType> {
+  |        ^^^^^^
