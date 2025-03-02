@@ -29,7 +29,7 @@ use self::{enum_impl::EnumImpl, struct_impl::StructImpl};
 mod enum_impl;
 mod struct_impl;
 
-/// .
+#[allow(missing_docs)]
 #[derive::derive(crate = common, host = "proc", name = Parse)]
 pub fn derive(
     crate_: Path,

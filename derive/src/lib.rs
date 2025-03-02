@@ -31,7 +31,8 @@ mod arg_parser;
 mod arg_spec;
 mod invoke;
 
-/// .
+// Documented in the re-export from proc
+#[allow(missing_docs)]
 #[attribute::attribute(crate = common, host = "proc")]
 pub fn derive(
     crate_: Path,
@@ -122,7 +123,7 @@ impl ToTokens for DeriveMacro {
                 #[allow(clippy::needless_pass_by_value)]
                 #logic
                 #args
-                #crate_::proc_attribute_function_must_return_proc_result(
+                #crate_::proc_derive_function_must_return_proc_result(
                     #invoke
                 ).into()
             }

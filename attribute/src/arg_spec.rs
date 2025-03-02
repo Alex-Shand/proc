@@ -41,13 +41,13 @@ impl ArgSpec {
             .chain(
                 args.iter()
                     .copied()
-                    .map(|a| Argument::new(extract_arg(a), &crate_)),
+                    .map(|a| Argument::new("attribute", extract_arg(a), &crate_)),
             )
             .collect::<Result<_>>()?,
             (None, [args @ .., _]) => args
                 .iter()
                 .copied()
-                .map(|a| Argument::new(extract_arg(a), &crate_))
+                .map(|a| Argument::new("attribute", extract_arg(a), &crate_))
                 .collect::<Result<_>>()?,
             (_, []) => return Err(Error::new_spanned(&sig.ident, "proc::attribute logic function must have at least one argument")),
             (Some(_), [_]) => return Err(Error::new_spanned(&sig.ident, "proc::attribute function must have two arguments if host is used")),

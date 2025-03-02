@@ -12,10 +12,7 @@ pub fn test(
         ::core::panicking::panic("not yet implemented")
     }
     let arg_spec = <common::meta::Optional<common::Path>>::new("crate");
-    let crate_ = match common::meta::Meta::parse_bare(
-        arg_spec,
-        __proc_internal_args.into(),
-    ) {
+    let crate_ = match common::meta::parse_bare(arg_spec, __proc_internal_args.into()) {
         Ok(result) => result,
         Err(e) => return e.into_compile_error().into(),
     };

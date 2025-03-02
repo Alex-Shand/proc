@@ -1,0 +1,5 @@
+error: proc::derive can only parse variable binding arguments
+ --> tests/ui/pattern_arg.rs:3:15
+  |
+3 | pub fn derive(Arg(_): Arg, item: InputType) -> Result<OutputType> {
+  |               ^^^^^^

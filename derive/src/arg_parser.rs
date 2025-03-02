@@ -69,7 +69,7 @@ impl ToTokens for ArgumentParser<'_> {
         let crate_resolve = arg_spec.crate_resolve();
         tokens.extend(quote! {
             let arg_spec = #arg_spec;
-            let #matcher = match #crate_::meta::Meta::parse_attrs(arg_spec, &#args[..]) {
+            let #matcher = match #crate_::meta::parse_attrs(arg_spec, &#args[..]) {
                 Ok(result) => result,
                 Err(e) => return e.into_compile_error().into()
             };

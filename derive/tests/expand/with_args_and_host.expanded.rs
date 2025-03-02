@@ -32,7 +32,7 @@ pub fn derive(
         <Optional<Arg2>>::new("arg2"),
         <Switch>::new("arg3"),
     );
-    let (crate_, arg1, arg2, arg3) = match common::meta::Meta::parse_attrs(
+    let (crate_, arg1, arg2, arg3) = match common::meta::parse_attrs(
         arg_spec,
         &__proc_internal_args[..],
     ) {
@@ -47,7 +47,7 @@ pub fn derive(
             Err(e) => return e.into_compile_error().into(),
         }
     };
-    common::proc_attribute_function_must_return_proc_result(
+    common::proc_derive_function_must_return_proc_result(
             derive(crate_, arg1, arg2, arg3, __proc_internal_item),
         )
         .into()

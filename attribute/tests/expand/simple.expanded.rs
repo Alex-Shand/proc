@@ -11,6 +11,14 @@ pub fn test(
     pub fn test(item: InputType) -> Result<OutputType> {
         ::core::panicking::panic("not yet implemented")
     }
+    if !__proc_internal_args.is_empty() {
+        return common::syn::Error::new_spanned(
+                __proc_internal_args,
+                "#[test] expects no arguments",
+            )
+            .into_compile_error()
+            .into();
+    }
     common::proc_attribute_function_must_return_proc_result(
             test(
                 match ::syn::parse::<_>(__proc_internal_item) {

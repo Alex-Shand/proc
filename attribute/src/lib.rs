@@ -18,8 +18,7 @@
 #![allow(clippy::similar_names)]
 
 use common::{
-    get_crate,
-    meta::{self, Meta as _},
+    get_crate, meta,
     proc_macro2::TokenStream,
     quote::{format_ident, quote, ToTokens},
     syn::{self, Attribute, Ident, ItemFn, LitStr, Path, Result},
@@ -31,14 +30,15 @@ mod arg_parser;
 mod arg_spec;
 mod invoke;
 
-/// Wrapper macro for defining attribute macros
+// Documented in the re-export from proc
+#[allow(missing_docs)]
 #[proc_macro_attribute]
 pub fn attribute(
     args: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let arg_spec = (meta::Optional::new("crate"), meta::Optional::new("host"));
-    let (crate_, host) = match arg_spec.parse_bare(args.into()) {
+    let (crate_, host) = match meta::parse_bare(arg_spec, args.into()) {
         Ok(result) => result,
         Err(e) => return e.into_compile_error().into(),
     };
@@ -88,7 +88,12 @@ impl AttributeMacro {
     }
 
     fn arg_parser(&self) -> ArgumentParser<'_> {
-        ArgumentParser::new(&self.crate_, &self.args, &self.arg_spec)
+        ArgumentParser::new(
+            &self.crate_,
+            self.name(),
+            &self.args,
+            &self.arg_spec,
+        )
     }
 
     fn invoke(&self) -> Invoke<'_> {

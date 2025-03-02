@@ -18,13 +18,16 @@ impl Argument {
     /// # Errors
     ///
     pub fn new(
+        name: &str,
         PatType { attrs, pat, ty, .. }: &PatType,
         crate_: &Path,
     ) -> Result<Self> {
         let Pat::Ident(ident) = &**pat else {
             return Err(Error::new_spanned(
                 pat,
-                "proc::attribute can only parse variable binding arguments",
+                format!(
+                    "proc::{name} can only parse variable binding arguments"
+                ),
             ));
         };
         let attrs = attrs.clone();
@@ -92,5 +95,105 @@ impl Argument {
     #[must_use]
     pub fn ident(&self) -> Ident {
         format_ident!("{}", self.name)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use pa::assert_eq;
+    use rstest::rstest;
+
+    use crate::argument::Argument;
+
+    #[test]
+    fn constructor_success() {
+        assert!(Argument::new(
+            "test",
+            &syn::parse_quote!(x: Type),
+            &syn::parse_quote!(crate)
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn constructor_fail() {
+        assert!(Argument::new(
+            "test",
+            &syn::parse_quote!(Type(_): Type),
+            &syn::parse_quote!(crate)
+        )
+        .is_err());
+    }
+
+    #[rstest]
+    #[case(
+        Argument::new(
+            "test",
+            &syn::parse_quote!(x: Type),
+            &syn::parse_quote!(crate),
+        ),
+        "x : < Type as crate :: meta :: Meta > :: Item",
+    )]
+    #[case(
+        Ok(Argument::crate_(
+            &syn::parse_quote!(x: Type),
+            &syn::parse_quote!(crate),
+        )),
+        "x : Type",
+    )]
+    fn as_logic_argument(
+        #[case] arg: syn::Result<Argument>,
+        #[case] expected: &str,
+    ) -> syn::Result<()> {
+        assert_eq!(expected, arg?.as_logic_argument().to_string());
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(
+        Argument::new(
+            "test",
+            &syn::parse_quote!(x: Type),
+            &syn::parse_quote!(crate),
+        ),
+        r#"< Type > :: new ("x")"#,
+    )]
+    #[case(
+        Ok(Argument::crate_(
+            &syn::parse_quote!(x: Type),
+            &syn::parse_quote!(crate),
+        )),
+        r#"< crate :: meta :: Optional < crate :: Path > > :: new ("crate")"#,
+    )]
+    fn as_parser_object(
+        #[case] arg: syn::Result<Argument>,
+        #[case] expected: &str,
+    ) -> syn::Result<()> {
+        assert_eq!(expected, arg?.as_parser_object().to_string());
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(
+        Argument::new(
+            "test",
+            &syn::parse_quote!(x: Type),
+            &syn::parse_quote!(crate),
+        ),
+        "x",
+    )]
+    #[case(
+        Ok(Argument::crate_(
+            &syn::parse_quote!(x: Type),
+            &syn::parse_quote!(crate),
+        )),
+        "crate_",
+    )]
+    fn ident(
+        #[case] arg: syn::Result<Argument>,
+        #[case] expected: &str,
+    ) -> syn::Result<()> {
+        assert_eq!(expected, arg?.ident().to_string());
+        Ok(())
     }
 }

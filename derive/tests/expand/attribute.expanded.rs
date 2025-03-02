@@ -28,6 +28,6 @@ pub fn derive(
             .into_compile_error()
             .into();
     }
-    common::proc_attribute_function_must_return_proc_result(derive(__proc_internal_item))
+    common::proc_derive_function_must_return_proc_result(derive(__proc_internal_item))
         .into()
 }

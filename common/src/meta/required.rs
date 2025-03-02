@@ -1,9 +1,21 @@
 use proc_macro2::Span;
 use syn::{parse::Parse, Error, Result};
 
-use super::{Meta, Optional};
+use super::Optional;
 
-/// Required argument
+/// Required meta argument
+///
+/// Argument format is a key value pair. It is an error to omit the argument.
+///
+/// ```rust,ignore
+/// // Success
+/// #[my_macro(required = <something>)]
+/// fn item() {}
+///
+/// // error: missing required argument: required
+/// #[my_macro]
+/// fn item() {}
+/// ```
 #[derive(Debug)]
 pub struct Required<T: Parse> {
     name: &'static str,
@@ -11,8 +23,8 @@ pub struct Required<T: Parse> {
 }
 
 impl<T: Parse> Required<T> {
-    /// New
     #[must_use]
+    #[doc(hidden)]
     pub fn new(name: &'static str) -> Self {
         Self {
             name,
@@ -21,14 +33,12 @@ impl<T: Parse> Required<T> {
     }
 }
 
-impl<T: Parse> Meta for Required<T> {
+#[sealed::sealed]
+impl<T: Parse> super::Meta for Required<T> {
     type Item = T;
 
-    fn parse_impl(
-        &mut self,
-        meta: &syn::meta::ParseNestedMeta<'_>,
-    ) -> Result<bool> {
-        self.opt.parse_impl(meta)
+    fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
+        self.opt.parse(meta)
     }
 
     fn validate(self) -> Result<Self::Item> {
@@ -40,5 +50,77 @@ impl<T: Parse> Meta for Required<T> {
                 format_args!("missing required argument: {}", self.name),
             ))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use pa::assert_eq;
+    use proc_macro2::Span;
+    use quote::ToTokens;
+
+    use super::{super::Meta as _, Required};
+
+    #[test]
+    fn parse_present() -> syn::Result<()> {
+        let attr: syn::Attribute = syn::parse_quote!(#[attribute(arg = true)]);
+        let mut parser: Required<syn::LitBool> = Required::new("arg");
+        attr.parse_nested_meta(|meta| {
+            assert!(parser.parse(&meta)?);
+            Ok(())
+        })?;
+        let result = parser.validate()?;
+        assert_eq!("true", result.into_token_stream().to_string());
+        Ok(())
+    }
+
+    #[test]
+    fn parse_absent() -> syn::Result<()> {
+        let attr: syn::Attribute = syn::parse_quote!(#[attribute()]);
+        let mut parser: Required<syn::LitBool> = Required::new("arg");
+        attr.parse_nested_meta(|meta| {
+            assert!(parser.parse(&meta)?);
+            Ok(())
+        })?;
+        let result = parser.validate();
+        assert!(result.is_err());
+        let Err(error) = result else { unreachable!() };
+        assert_eq!(
+            r#":: core :: compile_error ! { "missing required argument: arg" }"#,
+            error.into_compile_error().to_string()
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn parse_incorrect() {
+        let attr: syn::Attribute = syn::parse_quote!(#[attribute(foo = false)]);
+        let mut parser: Required<syn::LitBool> = Required::new("arg");
+        let result = attr.parse_nested_meta(|meta| {
+            assert!(!parser.parse(&meta)?);
+            Err(syn::Error::new(Span::call_site(), "AHHHH!"))
+        });
+        assert!(result.is_err());
+        let Err(error) = result else { unreachable!() };
+        assert_eq!(
+            r#":: core :: compile_error ! { "AHHHH!" }"#,
+            error.into_compile_error().to_string()
+        );
+    }
+
+    #[test]
+    fn invalid_meta_syntax() {
+        let attr: syn::Attribute = syn::parse_quote!(#[attribute(...)]);
+        let mut parser: Required<syn::LitBool> = Required::new("arg");
+        let result = attr.parse_nested_meta(|meta| {
+            assert!(!parser.parse(&meta)?);
+            Err(syn::Error::new(Span::call_site(), "AHHHH!"))
+        });
+        assert!(result.is_err());
+        let Err(error) = result else { unreachable!() };
+        assert_eq!(
+            r#":: core :: compile_error ! { "unexpected token in nested attribute, expected ident" }"#,
+            error.into_compile_error().to_string()
+        );
     }
 }

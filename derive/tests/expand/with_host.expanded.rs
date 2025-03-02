@@ -21,10 +21,7 @@ pub fn derive(
         "my_derive",
     );
     let arg_spec = <common::meta::Optional<common::Path>>::new("crate");
-    let crate_ = match common::meta::Meta::parse_attrs(
-        arg_spec,
-        &__proc_internal_args[..],
-    ) {
+    let crate_ = match common::meta::parse_attrs(arg_spec, &__proc_internal_args[..]) {
         Ok(result) => result,
         Err(e) => return e.into_compile_error().into(),
     };
@@ -36,7 +33,7 @@ pub fn derive(
             Err(e) => return e.into_compile_error().into(),
         }
     };
-    common::proc_attribute_function_must_return_proc_result(
+    common::proc_derive_function_must_return_proc_result(
             derive(crate_, __proc_internal_item),
         )
         .into()

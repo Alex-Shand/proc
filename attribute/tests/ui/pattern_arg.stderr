@@ -1,0 +1,5 @@
+error: proc::attribute can only parse variable binding arguments
+ --> tests/ui/pattern_arg.rs:2:13
+  |
+2 | pub fn test(Arg(_): Arg, item: InputType) -> Result<OutputType> {
+  |             ^^^^^^

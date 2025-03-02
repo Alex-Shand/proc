@@ -37,18 +37,16 @@ impl ArgSpec {
         let (args, item) = match (&host, &inputs[..]) {
             (Some(_), [c, args @ .., item]) => (
                 iter::once(Ok(Argument::crate_(extract_arg(c), &crate_)))
-                    .chain(
-                        args.iter()
-                            .copied()
-                            .map(|a| Argument::new(extract_arg(a), &crate_)),
-                    )
+                    .chain(args.iter().copied().map(|a| {
+                        Argument::new("derive", extract_arg(a), &crate_)
+                    }))
                     .collect::<Result<_>>()?,
                 *item,
             ),
             (None, [args @ .., item]) => (
                 args.iter()
                     .copied()
-                    .map(|a| Argument::new(extract_arg(a), &crate_))
+                    .map(|a| Argument::new("derive", extract_arg(a), &crate_))
                     .collect::<Result<_>>()?,
                 *item,
             ),

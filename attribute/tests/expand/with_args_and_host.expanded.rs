@@ -23,7 +23,7 @@ pub fn test(
         <Optional<Arg2>>::new("arg2"),
         <Switch>::new("arg3"),
     );
-    let (crate_, arg1, arg2, arg3) = match common::meta::Meta::parse_bare(
+    let (crate_, arg1, arg2, arg3) = match common::meta::parse_bare(
         arg_spec,
         __proc_internal_args.into(),
     ) {
