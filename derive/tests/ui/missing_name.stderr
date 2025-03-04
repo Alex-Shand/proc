@@ -1,7 +1,7 @@
 error: missing required argument: name
  --> tests/ui/missing_name.rs:2:1
   |
-2 | #[derive::derive(crate = common)]
-  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 | #[proc_derive::derive(crate = proc_common)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |
-  = note: this error originates in the attribute macro `derive::derive` (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the attribute macro `proc_derive::derive` (in Nightly builds, run with -Z macro-backtrace for more info)

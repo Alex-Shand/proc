@@ -29,21 +29,8 @@ use syn::{Attribute, Result};
 pub mod argument;
 /// Macro meta-argument parsing
 pub mod meta;
-
-/// Utility wrapper to implement [`ToTokens`] for [`Result`].
-/// The [`Ok`] variant is formatted according to its [`ToTokens`] implementation.
-/// The [`Err`] variant is converted to a call to [`compile_error`]
-#[derive(Debug)]
-pub struct ResultFormatter<T: ToTokens>(pub Result<T>);
-
-impl<T: ToTokens> ToTokens for ResultFormatter<T> {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match &self.0 {
-            Ok(result) => result.to_tokens(tokens),
-            Err(e) => tokens.extend(e.to_compile_error()),
-        }
-    }
-}
+/// Utilities for writing macros
+pub mod util;
 
 #[doc(hidden)]
 pub fn get_crate(name: &'static str) -> Result<Path> {
@@ -63,7 +50,7 @@ pub fn get_crate(name: &'static str) -> Result<Path> {
 pub fn proc_attribute_function_must_return_proc_result<T: ToTokens>(
     result: Result<T>,
 ) -> TokenStream {
-    ResultFormatter(result).into_token_stream()
+    util::ResultFormatter(result).into_token_stream()
 }
 
 #[doc(hidden)]
@@ -72,7 +59,7 @@ pub fn proc_attribute_function_must_return_proc_result<T: ToTokens>(
 pub fn proc_derive_function_must_return_proc_result<T: ToTokens>(
     result: Result<T>,
 ) -> TokenStream {
-    ResultFormatter(result).into_token_stream()
+    util::ResultFormatter(result).into_token_stream()
 }
 
 #[doc(hidden)]
@@ -90,36 +77,15 @@ pub fn proc_derive_last_argument_must_implement_meta_derive_input<
 #[cfg(test)]
 mod tests {
     use pa::assert_eq;
-    use proc_macro2::Span;
     use quote::ToTokens;
 
-    use super::ResultFormatter;
     use crate::get_crate;
-
-    #[test]
-    fn result_formatter_success() {
-        let code: syn::File = syn::parse_quote! {
-            fn main() {}
-        };
-        let formatter = ResultFormatter(Ok(code));
-        assert_eq!("fn main () { }", formatter.into_token_stream().to_string());
-    }
-
-    #[test]
-    fn result_formatter_error() {
-        let formatter: ResultFormatter<syn::File> =
-            ResultFormatter(Err(syn::Error::new(Span::call_site(), "AHHHHH!")));
-        assert_eq!(
-            r#":: core :: compile_error ! { "AHHHHH!" }"#,
-            formatter.into_token_stream().to_string()
-        );
-    }
 
     #[test]
     fn get_current_crate() -> syn::Result<()> {
         assert_eq!(
             "crate",
-            get_crate("common")?.into_token_stream().to_string()
+            get_crate("proc_common")?.into_token_stream().to_string()
         );
         Ok(())
     }

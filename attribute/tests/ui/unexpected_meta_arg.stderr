@@ -1,5 +1,5 @@
 error: unrecognised argument
- --> tests/ui/unexpected_meta_arg.rs:1:40
+ --> tests/ui/unexpected_meta_arg.rs:1:50
   |
-1 | #[attribute::attribute(crate = common, arg)]
-  |                                        ^^^
+1 | #[proc_attribute::attribute(crate = proc_common, arg)]
+  |                                                  ^^^

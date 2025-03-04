@@ -1,6 +1,6 @@
 use std::iter;
 
-use common::{
+use proc_common::{
     argument::Argument,
     proc_macro2::TokenStream,
     quote::{quote, ToTokens},

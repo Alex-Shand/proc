@@ -1,4 +1,4 @@
-use common::{
+use proc_common::{
     proc_macro2::TokenStream,
     quote::{quote, ToTokens},
     syn::{Ident, Path},

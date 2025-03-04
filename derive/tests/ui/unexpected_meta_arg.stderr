@@ -1,5 +1,5 @@
 error: unrecognised argument
- --> tests/ui/unexpected_meta_arg.rs:2:51
+ --> tests/ui/unexpected_meta_arg.rs:2:61
   |
-2 | #[derive::derive(crate = common, name = MyDerive, foo)]
-  |                                                   ^^^
+2 | #[proc_derive::derive(crate = proc_common, name = MyDerive, foo)]
+  |                                                             ^^^

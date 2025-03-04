@@ -31,9 +31,10 @@
 /// `#[proc::attribute]` expects to be applied to a fn item with at least one
 /// argument. The function must return [`Result<T>`](Result) where `T`
 /// implements [`ToTokens`](quote::ToTokens). An [`Err`] return value from the
-/// function is converted into a compile error. See [`ResultFormatter`] for an
-/// alternative way to generate compile errors in situations where returning an
-/// [`Err`] is inconvenient.
+/// function is converted into a compile error. See
+/// [`ResultFormatter`](util::ResultFormatter) for an alternative way to
+/// generate compile errors in situations where returning an [`Err`] is
+/// inconvenient.
 ///
 /// Allowed argument forms are as follows:
 ///
@@ -92,15 +93,15 @@
 /// #[my_attribute(crate = an_alias_for_my_crate, arg = "yet another string")]
 /// enum AnotherEnum {}
 /// ```
-pub use attribute::attribute;
-pub use common::{
-    ResultFormatter, get_crate, meta,
-    proc_attribute_function_must_return_proc_result,
+pub use proc_attribute::attribute;
+pub use proc_common::{
+    get_crate, meta, proc_attribute_function_must_return_proc_result,
     proc_derive_function_must_return_proc_result,
     proc_derive_last_argument_must_implement_meta_derive_input,
     proc_macro2::TokenStream,
     quote, syn,
     syn::{DeriveInput, ItemEnum, ItemStruct, Path, Result},
+    util,
 };
 /// Wrapper macro for defining derive macros
 ///
@@ -126,7 +127,7 @@ pub use common::{
 /// [DeriveInput](meta::DeriveInput). See documentation for
 /// [`#[proc::attribute]`](macro@attribute) for details of the other
 /// requirements.
-pub use derive::derive;
+pub use proc_derive::derive;
 /// Derive macro for [Parse](syn::parse::Parse)
 ///
 /// # Meta Arguments
@@ -137,4 +138,4 @@ pub use derive::derive;
 /// `#[derive(Parse)]` can be applied to Structs or Enums. Structs are parsed
 /// memberwise in declaration order. Enums are parsed into the first matching
 /// variant working top to bottom.
-pub use parse::Parse;
+pub use proc_parse::Parse;

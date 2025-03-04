@@ -1,7 +1,7 @@
-use common::{proc_macro2::TokenStream, syn};
+use proc_common::{proc_macro2::TokenStream, syn};
 
-#[derive(parse::Parse)]
-#[parse(crate = common)]
+#[derive(proc_parse::Parse)]
+#[parse(crate = proc_common)]
 struct Test;
 
 #[test]

@@ -1,5 +1,5 @@
 /// Docs
-#[derive::derive(crate = common)]
+#[proc_derive::derive(crate = proc_common)]
 pub fn derive(item: InputType) -> Result<OutputType> {
     todo!()
 }

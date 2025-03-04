@@ -1,8 +1,8 @@
-use common::{
+use proc_common::{
     proc_macro2::TokenStream,
     quote::{format_ident, quote, ToTokens},
     syn::{self, DataEnum, Error, Expr, Fields, Ident, Path, Result, Variant},
-    ResultFormatter,
+    util::ResultFormatter,
 };
 
 pub(crate) struct EnumImpl {

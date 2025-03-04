@@ -1,5 +1,5 @@
-#[derive(parse::Parse)]
-#[parse(crate = common, __internal_proc_hack = parse)]
+#[derive(proc_parse::Parse)]
+#[parse(crate = proc_common, __internal_proc_hack = proc_parse)]
 union Union {
     a: u32,
 }

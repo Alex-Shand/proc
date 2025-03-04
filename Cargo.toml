@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-attribute = { version = "0.1.0", path = "attribute" }
-derive = { version = "0.1.0", path = "derive" }
-parse = { version = "0.1.0", path = "parse" }
-common = { version = "0.1.0", path = "common" }
+proc_attribute = { version = "0.1.0", path = "attribute" }
+proc_derive = { version = "0.1.0", path = "derive" }
+proc_parse = { version = "0.1.0", path = "parse" }
+proc_common = { version = "0.1.0", path = "common" }
 
 [workspace]
 members = ["attribute", "common", "derive", "parse"]

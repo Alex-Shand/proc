@@ -9,9 +9,9 @@ pub fn test(
     #[allow(clippy::needless_pass_by_value)]
     /// Docs
     pub fn test(
-        arg1: <Required<Arg1> as common::meta::Meta>::Item,
-        arg2: <Optional<Arg2> as common::meta::Meta>::Item,
-        arg3: <Switch as common::meta::Meta>::Item,
+        arg1: <Required<Arg1> as proc_common::meta::Meta>::Item,
+        arg2: <Optional<Arg2> as proc_common::meta::Meta>::Item,
+        arg3: <Switch as proc_common::meta::Meta>::Item,
         item: InputType,
     ) -> Result<OutputType> {
         ::core::panicking::panic("not yet implemented")
@@ -21,14 +21,14 @@ pub fn test(
         <Optional<Arg2>>::new("arg2"),
         <Switch>::new("arg3"),
     );
-    let (arg1, arg2, arg3) = match common::meta::parse_bare(
+    let (arg1, arg2, arg3) = match proc_common::meta::parse_bare(
         arg_spec,
         __proc_internal_args.into(),
     ) {
         Ok(result) => result,
         Err(e) => return e.into_compile_error().into(),
     };
-    common::proc_attribute_function_must_return_proc_result(
+    proc_common::proc_attribute_function_must_return_proc_result(
             test(
                 arg1,
                 arg2,

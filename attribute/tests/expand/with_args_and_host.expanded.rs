@@ -10,20 +10,20 @@ pub fn test(
     /// Docs
     pub fn test(
         crate_: Path,
-        arg1: <Required<Arg1> as common::meta::Meta>::Item,
-        arg2: <Optional<Arg2> as common::meta::Meta>::Item,
-        arg3: <Switch as common::meta::Meta>::Item,
+        arg1: <Required<Arg1> as proc_common::meta::Meta>::Item,
+        arg2: <Optional<Arg2> as proc_common::meta::Meta>::Item,
+        arg3: <Switch as proc_common::meta::Meta>::Item,
         item: InputType,
     ) -> Result<OutputType> {
         ::core::panicking::panic("not yet implemented")
     }
     let arg_spec = (
-        <common::meta::Optional<common::Path>>::new("crate"),
+        <proc_common::meta::Optional<proc_common::Path>>::new("crate"),
         <Required<Arg1>>::new("arg1"),
         <Optional<Arg2>>::new("arg2"),
         <Switch>::new("arg3"),
     );
-    let (crate_, arg1, arg2, arg3) = match common::meta::parse_bare(
+    let (crate_, arg1, arg2, arg3) = match proc_common::meta::parse_bare(
         arg_spec,
         __proc_internal_args.into(),
     ) {
@@ -33,12 +33,12 @@ pub fn test(
     let crate_ = if let Some(c) = crate_ {
         c
     } else {
-        match common::get_crate("foo") {
+        match proc_common::get_crate("foo") {
             Ok(c) => c,
             Err(e) => return e.into_compile_error().into(),
         }
     };
-    common::proc_attribute_function_must_return_proc_result(
+    proc_common::proc_attribute_function_must_return_proc_result(
             test(
                 crate_,
                 arg1,

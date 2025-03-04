@@ -17,7 +17,7 @@
 #![allow(clippy::let_underscore_untyped)]
 #![allow(clippy::similar_names)]
 
-use common::{
+use proc_common::{
     get_crate, meta,
     proc_macro2::TokenStream,
     quote::{format_ident, quote, ToTokens},

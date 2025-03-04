@@ -17,7 +17,7 @@
 #![allow(clippy::let_underscore_untyped)]
 #![allow(clippy::similar_names)]
 
-use common::{
+use proc_common::{
     meta::Optional,
     proc_macro2::TokenStream,
     quote::ToTokens,
@@ -30,7 +30,7 @@ mod enum_impl;
 mod struct_impl;
 
 #[allow(missing_docs)]
-#[derive::derive(crate = common, host = "proc", name = Parse)]
+#[proc_derive::derive(crate = proc_common, host = "proc", name = Parse)]
 pub fn derive(
     crate_: Path,
     __internal_proc_hack: Optional<Path>,

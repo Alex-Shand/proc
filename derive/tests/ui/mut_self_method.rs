@@ -1,7 +1,7 @@
 struct Test;
 
 impl Test {
-    #[derive::derive(crate = common, name = MyDerive)]
+    #[proc_derive::derive(crate = proc_common, name = MyDerive)]
     pub fn test(mut self, item: InputType) -> Result<OutputType> {
         todo!()
     }

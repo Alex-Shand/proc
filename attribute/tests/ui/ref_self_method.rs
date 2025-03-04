@@ -1,7 +1,7 @@
 struct Test;
 
 impl Test {
-    #[attribute::attribute(crate = common)]
+    #[proc_attribute::attribute(crate = proc_common)]
     pub fn test(&self, item: InputType) -> Result<OutputType> {
         todo!()
     }

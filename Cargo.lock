@@ -12,15 +12,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "attribute"
-version = "0.1.0"
-dependencies = [
- "common",
- "macrotest",
- "trybuild",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -33,36 +24,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "common"
-version = "0.1.0"
-dependencies = [
- "pretty_assertions",
- "proc-macro-crate",
- "proc-macro2",
- "quote",
- "rstest",
- "sealed",
- "syn",
-]
-
-[[package]]
 name = "convert_case"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb402b8d4c85569410425650ce3eddc7d698ed96d39a73f941b08fb63082f1e7"
 dependencies = [
  "unicode-segmentation",
-]
-
-[[package]]
-name = "derive"
-version = "0.1.0"
-dependencies = [
- "attribute",
- "common",
- "convert_case",
- "macrotest",
- "trybuild",
 ]
 
 [[package]]
@@ -178,15 +145,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
-name = "parse"
-version = "0.1.0"
-dependencies = [
- "common",
- "derive",
- "trybuild",
-]
-
-[[package]]
 name = "pin-project-lite"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -222,10 +180,10 @@ dependencies = [
 name = "proc"
 version = "0.1.0"
 dependencies = [
- "attribute",
- "common",
- "derive",
- "parse",
+ "proc_attribute",
+ "proc_common",
+ "proc_derive",
+ "proc_parse",
 ]
 
 [[package]]
@@ -244,6 +202,48 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60946a68e5f9d28b0dc1c21bb8a97ee7d018a8b322fa57838ba31cc878e22d99"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "proc_attribute"
+version = "0.1.0"
+dependencies = [
+ "macrotest",
+ "proc_common",
+ "trybuild",
+]
+
+[[package]]
+name = "proc_common"
+version = "0.1.0"
+dependencies = [
+ "pretty_assertions",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "rstest",
+ "sealed",
+ "syn",
+]
+
+[[package]]
+name = "proc_derive"
+version = "0.1.0"
+dependencies = [
+ "convert_case",
+ "macrotest",
+ "proc_attribute",
+ "proc_common",
+ "trybuild",
+]
+
+[[package]]
+name = "proc_parse"
+version = "0.1.0"
+dependencies = [
+ "proc_common",
+ "proc_derive",
+ "trybuild",
 ]
 
 [[package]]

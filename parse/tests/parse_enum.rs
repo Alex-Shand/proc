@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
-use common::{proc_macro2::TokenStream, syn};
+use proc_common::{proc_macro2::TokenStream, syn};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-#[derive(parse::Parse, Debug, PartialEq)]
-#[parse(crate = common, __internal_proc_hack = parse)]
+#[derive(proc_parse::Parse, Debug, PartialEq)]
+#[parse(crate = proc_common, __internal_proc_hack = proc_parse)]
 enum Enum {
     Named {
         str: syn::LitStr,

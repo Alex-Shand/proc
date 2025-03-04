@@ -1,5 +1,5 @@
 [package]
-name = "parse"
+name = "proc_parse"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,8 +7,8 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-derive = { version = "0.1.0", path = "../derive" }
-common = { version = "0.1.0", path = "../common" }
+proc_derive = { version = "0.1.0", path = "../derive" }
+proc_common = { version = "0.1.0", path = "../common" }
 
 [dev-dependencies]
 trybuild = "1.0.103"

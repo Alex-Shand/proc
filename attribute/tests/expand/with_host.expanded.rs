@@ -11,20 +11,23 @@ pub fn test(
     pub fn test(crate_: Path, item: InputType) -> Result<OutputType> {
         ::core::panicking::panic("not yet implemented")
     }
-    let arg_spec = <common::meta::Optional<common::Path>>::new("crate");
-    let crate_ = match common::meta::parse_bare(arg_spec, __proc_internal_args.into()) {
+    let arg_spec = <proc_common::meta::Optional<proc_common::Path>>::new("crate");
+    let crate_ = match proc_common::meta::parse_bare(
+        arg_spec,
+        __proc_internal_args.into(),
+    ) {
         Ok(result) => result,
         Err(e) => return e.into_compile_error().into(),
     };
     let crate_ = if let Some(c) = crate_ {
         c
     } else {
-        match common::get_crate("foo") {
+        match proc_common::get_crate("foo") {
             Ok(c) => c,
             Err(e) => return e.into_compile_error().into(),
         }
     };
-    common::proc_attribute_function_must_return_proc_result(
+    proc_common::proc_attribute_function_must_return_proc_result(
             test(
                 crate_,
                 match ::syn::parse::<_>(__proc_internal_item) {

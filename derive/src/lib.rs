@@ -17,13 +17,13 @@
 #![allow(clippy::let_underscore_untyped)]
 #![allow(clippy::similar_names)]
 
-use common::{
+use convert_case::{Case, Casing as _};
+use proc_common::{
     meta::{Optional, Required},
     proc_macro2::TokenStream,
     quote::{format_ident, quote, ToTokens},
     syn::{self, Ident, ItemFn, LitStr, Path, Result},
 };
-use convert_case::{Case, Casing as _};
 
 use self::{arg_parser::ArgumentParser, arg_spec::ArgSpec, invoke::Invoke};
 
@@ -33,7 +33,7 @@ mod invoke;
 
 // Documented in the re-export from proc
 #[allow(missing_docs)]
-#[attribute::attribute(crate = common, host = "proc")]
+#[proc_attribute::attribute(crate = proc_common, host = "proc")]
 pub fn derive(
     crate_: Path,
     name: Required<Ident>,
