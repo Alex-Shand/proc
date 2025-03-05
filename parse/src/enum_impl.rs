@@ -1,48 +1,47 @@
 use proc_common::{
     proc_macro2::TokenStream,
     quote::{format_ident, quote, ToTokens},
-    syn::{self, DataEnum, Error, Expr, Fields, Ident, Path, Result, Variant},
-    util::ResultFormatter,
+    syn::{self, Error, Expr, Fields, Ident, Path, Result, Variant},
+    util::{standard_ident, ForEachField, ResultFormatter},
 };
 
-pub(crate) struct EnumImpl {
-    crate_: Path,
-    parse: Path,
-    name: Ident,
-    variants: Vec<Variant>,
+pub(crate) struct EnumImpl<'a> {
+    crate_: &'a Path,
+    parse: &'a Path,
+    ident: &'a Ident,
+    variants: &'a [Variant],
 }
 
-impl EnumImpl {
+impl<'a> EnumImpl<'a> {
     pub(crate) fn new(
-        crate_: Path,
-        parse: Path,
-        name: Ident,
-        data: DataEnum,
+        crate_: &'a Path,
+        parse: &'a Path,
+        ident: &'a Ident,
+        variants: &'a [Variant],
     ) -> Result<Self> {
-        let variants = data.variants.into_iter().collect::<Vec<_>>();
         if variants.is_empty() {
             return Err(Error::new_spanned(
-                name,
+                ident,
                 "cannot #[derive(Parse)] on an empty enum",
             ));
         }
         Ok(Self {
             crate_,
             parse,
-            name,
+            ident,
             variants,
         })
     }
 
     fn parse_body(&self) -> ParseBody<'_> {
-        ParseBody::new(&self.crate_, &self.parse, &self.name, &self.variants)
+        ParseBody::new(self.crate_, self.parse, self.ident, self.variants)
     }
 }
 
-impl ToTokens for EnumImpl {
+impl ToTokens for EnumImpl<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let crate_ = &self.crate_;
-        let name = &self.name;
+        let crate_ = self.crate_;
+        let name = self.ident;
         let parse_body = self.parse_body();
         tokens.extend(quote! {
             impl #crate_::syn::parse::Parse for #name {
@@ -130,7 +129,7 @@ impl ToTokens for VariantStruct<'_> {
         let parse = self.parse;
         let self_type = self.self_type;
         let variant = &self.variant.ident;
-        let ident = Self::struct_name(&self.variant.ident);
+        let ident = Self::struct_name(variant);
         let fields = &self.variant.fields;
         let matcher = self.matcher();
         tokens.extend(quote! {
@@ -160,22 +159,10 @@ impl<'a> Matcher<'a> {
 
 impl ToTokens for Matcher<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self.fields {
-            Fields::Unit => (),
-            Fields::Unnamed(fields) => {
-                let mut counter = 0;
-                let idents = fields.unnamed.iter().map(|_| {
-                    let ident = format_ident!("_{counter}");
-                    counter += 1;
-                    ident
-                });
-                tokens.extend(quote!((#(#idents),*)));
-            }
-            Fields::Named(fields) => {
-                let idents = fields.named.iter().map(|f| &f.ident);
-                tokens.extend(quote!({#(#idents),*}));
-            }
-        }
+        ForEachField(self.fields, |idx, field| {
+            standard_ident(&idx, field).into_token_stream()
+        })
+        .to_tokens(tokens);
     }
 }
 

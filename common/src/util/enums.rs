@@ -1,10 +1,8 @@
-use std::borrow::Cow;
-
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, ToTokens};
-use syn::{Field, Ident, Index, Type, Variant};
+use quote::{quote, ToTokens};
+use syn::{Ident, Type, Variant};
 
-use super::ForEachField;
+use super::{standard_ident, ForEachField};
 
 /// Generate code for an enum variant given tokens for each of its fields (if
 /// any)
@@ -32,7 +30,7 @@ impl<F: Fn(&Ident, &Type) -> TokenStream> ToTokens for VariantExpander<'_, F> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.0.ident.to_tokens(tokens);
         ForEachField(&self.0.fields, |idx, field| {
-            let ident = enum_field_ident(&idx, field);
+            let ident = standard_ident(&idx, field);
             let expr = (self.1)(&ident, &field.ty);
             if field.ident.is_some() {
                 quote!(#ident: #expr)
@@ -59,17 +57,9 @@ impl ToTokens for EnumMatcher<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.0.ident.to_tokens(tokens);
         ForEachField(&self.0.fields, |idx, field| {
-            enum_field_ident(&idx, field).into_token_stream()
+            standard_ident(&idx, field).into_token_stream()
         })
         .to_tokens(tokens);
-    }
-}
-
-fn enum_field_ident<'a>(idx: &Index, field: &'a Field) -> Cow<'a, Ident> {
-    if let Some(ident) = &field.ident {
-        Cow::Borrowed(ident)
-    } else {
-        Cow::Owned(format_ident!("_{}", idx.index))
     }
 }
 

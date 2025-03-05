@@ -20,14 +20,16 @@
 use proc_common::{
     meta::Optional,
     proc_macro2::TokenStream,
-    quote::ToTokens,
-    syn::{Data, DeriveInput, Error, Path, Result},
+    quote::{quote, ToTokens},
+    syn::{DeriveInput, Error, Path, Result},
+    util::{
+        EnumData, ForEachField, ResultFormatter, StructData, StructEnumDeriver,
+    },
 };
 
-use self::{enum_impl::EnumImpl, struct_impl::StructImpl};
+use self::enum_impl::EnumImpl;
 
 mod enum_impl;
-mod struct_impl;
 
 #[allow(missing_docs)]
 #[proc_derive::derive(crate = proc_common, host = "proc", name = Parse)]
@@ -35,42 +37,60 @@ pub fn derive(
     crate_: Path,
     __internal_proc_hack: Optional<Path>,
     item: DeriveInput,
-) -> Result<ParseImpl> {
-    let parse = __internal_proc_hack.unwrap_or_else(|| crate_.clone());
-    if item.generics.params.iter().next().is_some() {
+) -> Result<StructEnumDeriver<(Path, Path)>> {
+    if !item.generics.params.is_empty() {
         return Err(Error::new_spanned(
             item.generics,
             "#[derive(Parse)] doesn't support generics",
         ));
     }
-    Ok(match item.data {
-        Data::Struct(data) => {
-            ParseImpl::Struct(StructImpl::new(crate_, item.ident, data))
-        }
-        Data::Enum(data) => {
-            ParseImpl::Enum(EnumImpl::new(crate_, parse, item.ident, data)?)
-        }
-        Data::Union(data) => {
-            return Err(Error::new_spanned(
-                data.union_token,
-                "#[derive(Parse)] cannot be used on unions",
-            ));
-        }
-    })
+
+    let parse = __internal_proc_hack.unwrap_or_else(|| crate_.clone());
+    StructEnumDeriver::new(
+        "Parse",
+        item,
+        (crate_, parse),
+        struct_logic,
+        enum_logic,
+    )
 }
 
-enum ParseImpl {
-    Struct(StructImpl),
-    Enum(EnumImpl),
+fn struct_logic(
+    StructData {
+        ident,
+        generics: _,
+        fields,
+    }: &StructData,
+    (crate_, _): &(Path, Path),
+    tokens: &mut TokenStream,
+) {
+    let fields = ForEachField(fields, |_, field| {
+        if let Some(ident) = &field.ident {
+            quote!(#ident: input.parse()?)
+        } else {
+            quote!(input.parse()?)
+        }
+    });
+    tokens.extend(quote! {
+        impl #crate_::syn::parse::Parse for #ident {
+            fn parse(input: #crate_::syn::parse::ParseStream<'_>) -> #crate_::syn::Result<Self> {
+                Ok(Self #fields)
+            }
+        }
+    });
 }
 
-impl ToTokens for ParseImpl {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            ParseImpl::Struct(s) => s.to_tokens(tokens),
-            ParseImpl::Enum(e) => e.to_tokens(tokens),
-        }
-    }
+fn enum_logic(
+    EnumData {
+        ident,
+        generics: _,
+        variants,
+    }: &EnumData,
+    (crate_, parse): &(Path, Path),
+    tokens: &mut TokenStream,
+) {
+    ResultFormatter(EnumImpl::new(crate_, parse, ident, variants))
+        .to_tokens(tokens);
 }
 
 #[cfg(test)]

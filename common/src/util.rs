@@ -1,8 +1,8 @@
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use proc_macro2::TokenStream;
-use quote::ToTokens;
-use syn::Error;
+use quote::{format_ident, ToTokens};
+use syn::{Error, Field, Ident, Index};
 
 pub use self::{
     enums::{EnumMatcher, VariantExpander},
@@ -23,6 +23,18 @@ pub fn compile_error(
     message: impl Display,
 ) -> TokenStream {
     Error::new_spanned(tokens, message).into_compile_error()
+}
+
+/// Convert the `idx`, `field` pair from [`ForEachField`] to a standard
+/// [`Ident`]. If the field is named the result is the field's [`Ident`]. For an
+/// unnamed field the returned ident is `_<idx>`.
+#[must_use]
+pub fn standard_ident<'a>(idx: &Index, field: &'a Field) -> Cow<'a, Ident> {
+    if let Some(ident) = &field.ident {
+        Cow::Borrowed(ident)
+    } else {
+        Cow::Owned(format_ident!("_{}", idx.index))
+    }
 }
 
 #[cfg(test)]
