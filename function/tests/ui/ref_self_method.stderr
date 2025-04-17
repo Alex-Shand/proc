@@ -1,0 +1,5 @@
+error: proc::function must be applied to a function with exactly one non-receiver argument
+ --> tests/ui/ref_self_method.rs:5:17
+  |
+5 |     pub fn test(&self) -> Result<OutputType> {
+  |                 ^^^^^

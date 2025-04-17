@@ -98,6 +98,7 @@ pub use proc_common::{
     get_crate, meta, proc_attribute_function_must_return_proc_result,
     proc_derive_function_must_return_proc_result,
     proc_derive_last_argument_must_implement_meta_derive_input,
+    proc_macro_function_must_return_proc_result,
     proc_macro2::TokenStream,
     quote, syn,
     syn::{DeriveInput, ItemEnum, ItemStruct, Path, Result},
@@ -128,6 +129,18 @@ pub use proc_common::{
 /// [`#[proc::attribute]`](macro@attribute) for details of the other
 /// requirements.
 pub use proc_derive::derive;
+/// Wrapper macro for defining function-like macros
+///
+/// # Item
+/// `#[proc::function]` expects to be applied to a fn item with at exactly one
+/// argument which implements [`Parse`](syn::parse::Parse) The function must
+/// return [`Result<T>`](Result) where `T` implements
+/// [`ToTokens`](quote::ToTokens). An [`Err`] return value from the function is
+/// converted into a compile error. See
+/// [`ResultFormatter`](util::ResultFormatter) for an alternative way to
+/// generate compile errors in situations where returning an [`Err`] is
+/// inconvenient.
+pub use proc_function::function;
 /// Derive macro for [Parse](syn::parse::Parse)
 ///
 /// # Meta Arguments

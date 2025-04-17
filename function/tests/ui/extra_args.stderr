@@ -1,0 +1,5 @@
+error: proc::function must be applied to a function with exactly one non-receiver argument
+ --> tests/ui/extra_args.rs:2:13
+  |
+2 | pub fn test(one: One, two: Two) -> Result<OutputType> {
+  |             ^^^^^^^^^^^^^^^^^^

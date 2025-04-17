@@ -183,6 +183,7 @@ dependencies = [
  "proc_attribute",
  "proc_common",
  "proc_derive",
+ "proc_function",
  "proc_parse",
 ]
 
@@ -231,6 +232,16 @@ name = "proc_derive"
 version = "0.1.0"
 dependencies = [
  "convert_case",
+ "macrotest",
+ "proc_attribute",
+ "proc_common",
+ "trybuild",
+]
+
+[[package]]
+name = "proc_function"
+version = "0.1.0"
+dependencies = [
  "macrotest",
  "proc_attribute",
  "proc_common",

@@ -1,0 +1,5 @@
+error: unrecognised argument
+ --> tests/ui/unexpected_meta_arg.rs:1:48
+  |
+1 | #[proc_function::function(crate = proc_common, foo)]
+  |                                                ^^^

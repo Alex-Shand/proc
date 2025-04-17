@@ -8,6 +8,7 @@ proc_attribute = { version = "0.1.0", path = "attribute" }
 proc_derive = { version = "0.1.0", path = "derive" }
 proc_parse = { version = "0.1.0", path = "parse" }
 proc_common = { version = "0.1.0", path = "common" }
+proc_function = { version = "0.1.0", path = "function" }
 
 [workspace]
-members = ["attribute", "common", "derive", "parse"]
+members = ["attribute", "common", "derive", "parse", "function"]

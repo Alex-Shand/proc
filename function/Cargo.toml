@@ -1,0 +1,15 @@
+[package]
+name = "proc_function"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc_attribute = { version = "0.1.0", path = "../attribute" }
+proc_common = { version = "0.1.0", path = "../common" }
+
+[dev-dependencies]
+macrotest = "1.1.0"
+trybuild = "1.0.103"

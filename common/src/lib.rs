@@ -65,6 +65,15 @@ pub fn proc_derive_function_must_return_proc_result<T: ToTokens>(
 #[doc(hidden)]
 #[expect(clippy::inline_always)]
 #[inline(always)]
+pub fn proc_macro_function_must_return_proc_result<T: ToTokens>(
+    result: Result<T>,
+) -> TokenStream {
+    util::ResultFormatter(result).into_token_stream()
+}
+
+#[doc(hidden)]
+#[expect(clippy::inline_always)]
+#[inline(always)]
 pub fn proc_derive_last_argument_must_implement_meta_derive_input<
     D: meta::DeriveInput,
 >(
