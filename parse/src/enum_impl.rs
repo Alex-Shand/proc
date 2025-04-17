@@ -1,8 +1,8 @@
 use proc_common::{
     proc_macro2::TokenStream,
     quote::{format_ident, quote, ToTokens},
-    syn::{self, Error, Expr, Fields, Ident, Path, Result, Variant},
-    util::{standard_ident, ForEachField, ResultFormatter},
+    syn::{Error, Fields, Ident, Path, Result, Variant},
+    util::{standard_ident, ForEachField},
 };
 
 pub(crate) struct EnumImpl<'a> {
@@ -78,16 +78,29 @@ impl<'a> ParseBody<'a> {
 
 impl ToTokens for ParseBody<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let variant_structs = self.variants.iter().map(|v| {
-            VariantStruct::new(self.crate_, self.parse, self.self_type, v)
-        });
-        let parsers =
-            self.variants.iter().map(Parser::new).map(ResultFormatter);
+        let crate_ = self.crate_;
+        let variant_structs = self
+            .variants
+            .iter()
+            .map(|v| VariantStruct::new(crate_, self.parse, self.self_type, v));
+        let parsers = self.variants.iter().map(Parser::new);
         tokens.extend(quote! {
             #(#variant_structs)*
-            let lookahead = input.lookahead1();
+            fn __maybe_parse<P: #crate_::syn::parse::Parse>(input: #crate_::syn::parse::ParseStream<'_>) -> #crate_::syn::Result<P> {
+                let fork = input.fork();
+                let result = fork.parse();
+                if result.is_ok() {
+                    use #crate_::syn::parse::discouraged::Speculative as _;
+                    input.advance_to(&fork);
+                }
+                result
+            }
+            let mut __errors = Vec::new();
             #(#parsers)*
-            return Err(lookahead.error());
+            Err(__errors.into_iter().reduce(|mut acc, e| {
+                acc.combine(e);
+                acc
+            }).expect("__errors list is unexpectedly empty"))
         });
     }
 }
@@ -166,40 +179,25 @@ impl ToTokens for Matcher<'_> {
     }
 }
 
-struct Parser<'a> {
-    matcher: Expr,
-    ident: &'a Ident,
+struct Parser {
+    target_type: Ident,
 }
 
-impl<'a> Parser<'a> {
-    fn new(variant: &'a Variant) -> Result<Self> {
-        let err = || {
-            Error::new_spanned(
-                &variant.ident,
-                "unit enum variants cannot be parsed",
-            )
-        };
-        let matcher = match &variant.fields {
-            Fields::Named(fields) => &fields.named.first().ok_or_else(err)?.ty,
-            Fields::Unnamed(fields) => {
-                &fields.unnamed.first().ok_or_else(err)?.ty
-            }
-            Fields::Unit => return Err(err()),
-        };
-        Ok(Self {
-            matcher: syn::parse2(matcher.into_token_stream())?,
-            ident: &variant.ident,
-        })
+impl Parser {
+    fn new(variant: &'_ Variant) -> Self {
+        Self {
+            target_type: VariantStruct::struct_name(&variant.ident),
+        }
     }
 }
 
-impl ToTokens for Parser<'_> {
+impl ToTokens for Parser {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let matcher = &self.matcher;
-        let ident = VariantStruct::struct_name(self.ident);
+        let target_type = &self.target_type;
         tokens.extend(quote! {
-            if lookahead.peek(#matcher) {
-                return Ok(input.parse::<#ident>()?.into())
+            match __maybe_parse::<#target_type>(input) {
+                Ok(result) => return Ok(result.into()),
+                Err(e) => __errors.push(e)
             }
         });
     }
