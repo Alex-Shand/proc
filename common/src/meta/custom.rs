@@ -1,62 +1,62 @@
-use proc_macro2::Span;
-use syn::{parse::Parse, Error, Result};
+use syn::{
+    parse::{Parse, ParseStream},
+    Result,
+};
 
-use super::Optional;
-
-/// Required meta argument
+/// Custom meta arg format
 ///
-/// Argument format is a key value pair. It is an error to omit the argument.
+/// Syntax is `key <something>` where `<something>` is defined by the [`Parse`]
+/// implementation of `T`. The value exposed to the macro is `T`, if the key is
+/// not present `T`'s [`Default`] implementation is used.
 ///
 /// ```rust,ignore
-/// // Success
-/// #[my_macro(required = <something>)]
-/// fn item() {}
-///
-/// // error: missing required argument: required
-/// #[my_macro]
+/// // E.g using Expr's Parse implementation
+/// #[my_macro(key 1 + 2)]
 /// fn item() {}
 /// ```
 #[derive(Debug)]
-pub struct Required<T: Parse> {
+pub struct Custom<T: Meta> {
     name: &'static str,
-    opt: Optional<T>,
+    value: Option<T>,
 }
 
-impl<T: Parse> Required<T> {
+impl<T: Meta> Custom<T> {
     #[must_use]
     #[doc(hidden)]
     pub fn new(name: &'static str) -> Self {
-        Self {
-            name,
-            opt: Optional::new(name),
-        }
+        Self { name, value: None }
     }
 }
 
 #[sealed::sealed]
-impl<T: Parse> super::RawMeta for Required<T> {
+impl<T: Meta> super::RawMeta for Custom<T> {
     type Item = T;
 
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
-        self.opt.parse(meta)
+        if meta.path.is_ident(self.name) {
+            self.value = Some(Meta::parse(meta.input)?);
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     fn validate(self) -> Result<Self::Item> {
-        if let Some(value) = self.opt.validate()? {
-            Ok(value)
-        } else {
-            Err(required_argument_error(self.name))
-        }
+        Ok(self.value.unwrap_or_default())
     }
 }
 
-/// Provides standardized formatting for a missing required meta argument
-#[must_use]
-pub fn required_argument_error(name: &'static str) -> Error {
-    Error::new(
-        Span::call_site(),
-        format_args!("missing required argument: {name}"),
-    )
+/// .
+pub trait Meta: Default {
+    ///
+    /// # Errors
+    ///
+    fn parse(stream: ParseStream<'_>) -> Result<Self>;
+}
+
+impl<T: Parse> Meta for Option<T> {
+    fn parse(stream: ParseStream<'_>) -> Result<Self> {
+        Ok(Some(stream.parse()?))
+    }
 }
 
 #[cfg(test)]
@@ -65,43 +65,41 @@ mod tests {
     use proc_macro2::Span;
     use quote::ToTokens;
 
-    use super::{super::RawMeta as _, Required};
+    use super::{super::RawMeta as _, Custom};
 
     #[test]
     fn parse_present() -> syn::Result<()> {
-        let attr: syn::Attribute = syn::parse_quote!(#[attribute(arg = true)]);
-        let mut parser: Required<syn::LitBool> = Required::new("arg");
+        let attr: syn::Attribute =
+            syn::parse_quote!(#[attribute(custom 1 + 2)]);
+        let mut parser: Custom<Option<syn::Expr>> = Custom::new("custom");
         attr.parse_nested_meta(|meta| {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
         let result = parser.validate()?;
-        assert_eq!("true", result.into_token_stream().to_string());
+        assert!(result.is_some());
+        let result = result.unwrap();
+        assert_eq!("1 + 2", result.into_token_stream().to_string());
         Ok(())
     }
 
     #[test]
     fn parse_absent() -> syn::Result<()> {
         let attr: syn::Attribute = syn::parse_quote!(#[attribute()]);
-        let mut parser: Required<syn::LitBool> = Required::new("arg");
+        let mut parser: Custom<Option<syn::Expr>> = Custom::new("custom");
         attr.parse_nested_meta(|meta| {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate();
-        assert!(result.is_err());
-        let Err(error) = result else { unreachable!() };
-        assert_eq!(
-            r#":: core :: compile_error ! { "missing required argument: arg" }"#,
-            error.into_compile_error().to_string()
-        );
+        let result = parser.validate()?;
+        assert!(result.is_none());
         Ok(())
     }
 
     #[test]
     fn parse_incorrect() {
         let attr: syn::Attribute = syn::parse_quote!(#[attribute(foo = false)]);
-        let mut parser: Required<syn::LitBool> = Required::new("arg");
+        let mut parser: Custom<Option<syn::Expr>> = Custom::new("custom");
         let result = attr.parse_nested_meta(|meta| {
             assert!(!parser.parse(&meta)?);
             Err(syn::Error::new(Span::call_site(), "AHHHH!"))
@@ -117,7 +115,7 @@ mod tests {
     #[test]
     fn invalid_meta_syntax() {
         let attr: syn::Attribute = syn::parse_quote!(#[attribute(...)]);
-        let mut parser: Required<syn::LitBool> = Required::new("arg");
+        let mut parser: Custom<Option<syn::Expr>> = Custom::new("custom");
         let result = attr.parse_nested_meta(|meta| {
             assert!(!parser.parse(&meta)?);
             Err(syn::Error::new(Span::call_site(), "AHHHH!"))

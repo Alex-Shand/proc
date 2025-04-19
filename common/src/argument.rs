@@ -33,7 +33,8 @@ impl Argument {
         let attrs = attrs.clone();
         let pat = (**pat).clone();
         let arg_spec = (**ty).clone();
-        let typ = syn::parse_quote!(<#arg_spec as #crate_::meta::Meta>::Item);
+        let typ =
+            syn::parse_quote!(<#arg_spec as #crate_::meta::RawMeta>::Item);
         Ok(Self {
             attrs,
             name: ident.ident.to_string(),
@@ -132,7 +133,7 @@ mod tests {
             &syn::parse_quote!(x: Type),
             &syn::parse_quote!(crate),
         ),
-        "x : < Type as crate :: meta :: Meta > :: Item",
+        "x : < Type as crate :: meta :: RawMeta > :: Item",
     )]
     #[case(
         Ok(Argument::crate_(

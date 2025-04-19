@@ -1,41 +1,52 @@
-use syn::{parse::Parse, Result};
+use syn::{parenthesized, parse::Parse, Result, Token};
 
-/// Optional meta argument
+/// List meta argument
 ///
-/// The syntax is identical to [`Required`](super::Required) but it is not an
-/// error if the argument is not present. The value exposed to the macro
-/// implementation is [`Option<T>`]
+/// Syntax is `key(value1, value2, ...)`. The value exposed to the macro is [`Vec<T>`]. If
+/// the key is not present the result is an empty `Vec`
 ///
 /// ```rust,ignore
 /// // Ok
-/// #[my_macro(optional = <something>)]
+/// #[my_macro(list(<something>, <something else>))]
 /// fn item() {}
 ///
-/// // Also ok
+/// // Results in an empty Vec passed to the macro
+/// #[my_macro(list())]
+/// fn item() {}
+///
+/// // Also results in an empty Vec passed to the macro
 /// #[my_macro]
 /// fn item() {}
 /// ```
 #[derive(Debug)]
-pub struct Optional<T: Parse> {
+pub struct List<T: Parse> {
     name: &'static str,
-    value: Option<T>,
+    value: Vec<T>,
 }
 
-impl<T: Parse> Optional<T> {
+impl<T: Parse> List<T> {
     #[must_use]
     #[doc(hidden)]
     pub fn new(name: &'static str) -> Self {
-        Self { name, value: None }
+        Self {
+            name,
+            value: Vec::new(),
+        }
     }
 }
 
 #[sealed::sealed]
-impl<T: Parse> super::RawMeta for Optional<T> {
-    type Item = Option<T>;
+impl<T: Parse> super::RawMeta for List<T> {
+    type Item = Vec<T>;
 
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
         if meta.path.is_ident(self.name) {
-            self.value = Some(meta.value()?.parse()?);
+            let content;
+            let _ = parenthesized!(content in meta.input);
+            self.value = content
+                .parse_terminated(T::parse, Token![,])?
+                .into_iter()
+                .collect();
             return Ok(true);
         }
         Ok(false)
@@ -52,41 +63,56 @@ mod tests {
     use proc_macro2::Span;
     use quote::ToTokens;
 
-    use super::{super::RawMeta as _, Optional};
+    use super::{super::RawMeta as _, List};
 
     #[test]
-    fn parse_present() -> syn::Result<()> {
+    fn parse_full_list() -> syn::Result<()> {
         let attr: syn::Attribute =
-            syn::parse_quote!(#[attribute(optional = true)]);
-        let mut parser: Optional<syn::LitBool> = Optional::new("optional");
+            syn::parse_quote!(#[attribute(list(true, false, true))]);
+        let mut parser: List<syn::LitBool> = List::new("list");
         attr.parse_nested_meta(|meta| {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
         let result = parser.validate()?;
-        assert!(result.is_some());
-        let result = result.unwrap();
-        assert_eq!("true", result.into_token_stream().to_string());
+        let result = result
+            .into_iter()
+            .map(|r| r.into_token_stream().to_string())
+            .collect::<Vec<_>>();
+        assert_eq!(["true", "false", "true"], result[..]);
+        Ok(())
+    }
+
+    #[test]
+    fn parse_empty_list() -> syn::Result<()> {
+        let attr: syn::Attribute = syn::parse_quote!(#[attribute(list())]);
+        let mut parser: List<syn::LitBool> = List::new("list");
+        attr.parse_nested_meta(|meta| {
+            assert!(parser.parse(&meta)?);
+            Ok(())
+        })?;
+        let result = parser.validate()?;
+        assert!(result.is_empty());
         Ok(())
     }
 
     #[test]
     fn parse_absent() -> syn::Result<()> {
         let attr: syn::Attribute = syn::parse_quote!(#[attribute()]);
-        let mut parser: Optional<syn::LitBool> = Optional::new("optional");
+        let mut parser: List<syn::LitBool> = List::new("list");
         attr.parse_nested_meta(|meta| {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
         let result = parser.validate()?;
-        assert!(result.is_none());
+        assert!(result.is_empty());
         Ok(())
     }
 
     #[test]
     fn parse_incorrect() {
         let attr: syn::Attribute = syn::parse_quote!(#[attribute(foo = false)]);
-        let mut parser: Optional<syn::LitBool> = Optional::new("optional");
+        let mut parser: List<syn::LitBool> = List::new("list");
         let result = attr.parse_nested_meta(|meta| {
             assert!(!parser.parse(&meta)?);
             Err(syn::Error::new(Span::call_site(), "AHHHH!"))
@@ -102,7 +128,7 @@ mod tests {
     #[test]
     fn invalid_meta_syntax() {
         let attr: syn::Attribute = syn::parse_quote!(#[attribute(...)]);
-        let mut parser: Optional<syn::LitBool> = Optional::new("optional");
+        let mut parser: List<syn::LitBool> = List::new("list");
         let result = attr.parse_nested_meta(|meta| {
             assert!(!parser.parse(&meta)?);
             Err(syn::Error::new(Span::call_site(), "AHHHH!"))

@@ -28,7 +28,7 @@ impl Switch {
 }
 
 #[sealed::sealed]
-impl super::Meta for Switch {
+impl super::RawMeta for Switch {
     type Item = bool;
 
     fn parse(
@@ -52,7 +52,7 @@ mod tests {
     use pa::assert_eq;
     use proc_macro2::Span;
 
-    use super::{super::Meta as _, Switch};
+    use super::{super::RawMeta as _, Switch};
 
     #[test]
     fn parse_present() -> syn::Result<()> {

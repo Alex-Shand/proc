@@ -13,7 +13,7 @@ pub fn test(
     }
     if !__proc_internal_args.is_empty() {
         return proc_common::syn::Error::new_spanned(
-                __proc_internal_args,
+                proc_common::TokenStream::from(__proc_internal_args),
                 "#[test] expects no arguments",
             )
             .into_compile_error()

@@ -38,7 +38,7 @@ impl ToTokens for ArgumentParser<'_> {
             return tokens.extend(quote! {
                 if !#args.is_empty() {
                     return #crate_::syn::Error::new_spanned(
-                        #args,
+                        #crate_::TokenStream::from(#args),
                         concat!("#[", stringify!(#name), "] expects no arguments"),
                     ).into_compile_error().into();
                 }

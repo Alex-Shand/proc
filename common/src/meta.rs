@@ -1,8 +1,16 @@
 use proc_macro2::TokenStream;
 use syn::{parse::Parser as _, Attribute, Result};
 
-pub use self::{optional::Optional, required::Required, switch::Switch};
+pub use self::{
+    custom::{Custom, Meta},
+    list::List,
+    optional::Optional,
+    required::{required_argument_error, Required},
+    switch::Switch,
+};
 
+mod custom;
+mod list;
 mod optional;
 mod required;
 mod switch;
@@ -10,14 +18,14 @@ mod tuple;
 
 #[doc(hidden)]
 #[sealed::sealed]
-pub trait Meta: Sized {
+pub trait RawMeta: Sized {
     type Item;
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool>;
     fn validate(self) -> Result<Self::Item>;
 }
 
 #[doc(hidden)]
-pub fn parse_bare<M: Meta>(
+pub fn parse_bare<M: RawMeta>(
     mut parser: M,
     tokens: TokenStream,
 ) -> Result<M::Item> {
@@ -32,7 +40,7 @@ pub fn parse_bare<M: Meta>(
 }
 
 #[doc(hidden)]
-pub fn parse_attrs<M: Meta>(
+pub fn parse_attrs<M: RawMeta>(
     mut parser: M,
     attrs: &[Attribute],
 ) -> Result<M::Item> {
