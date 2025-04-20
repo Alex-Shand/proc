@@ -16,6 +16,7 @@
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::let_underscore_untyped)]
 #![allow(clippy::similar_names)]
+#![allow(clippy::missing_errors_doc)]
 
 pub use proc_macro2;
 use proc_macro2::TokenStream;
@@ -77,10 +78,9 @@ pub fn proc_macro_function_must_return_proc_result<T: ToTokens>(
 pub fn proc_derive_last_argument_must_implement_meta_derive_input<
     D: meta::DeriveInput,
 >(
-    derive_input: D,
-    guard: &'static str,
-) -> (D, Vec<Attribute>) {
-    derive_input.skim_attributes(guard)
+    derive_input: &D,
+) -> &[Attribute] {
+    derive_input.skim_attributes()
 }
 
 #[cfg(test)]

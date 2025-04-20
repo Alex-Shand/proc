@@ -16,13 +16,13 @@ pub fn derive(
             return ::syn::__private::TokenStream::from(err.to_compile_error());
         }
     };
-    let (__proc_internal_item, __proc_internal_args) = proc_common::proc_derive_last_argument_must_implement_meta_derive_input(
-        __proc_internal_item,
-        "my_derive",
+    let __proc_internal_args = proc_common::proc_derive_last_argument_must_implement_meta_derive_input(
+        &__proc_internal_item,
     );
     let arg_spec = <proc_common::meta::Optional<proc_common::Path>>::new("crate");
     let crate_ = match proc_common::meta::parse_attrs(
         arg_spec,
+        "my_derive",
         &__proc_internal_args[..],
     ) {
         Ok(result) => result,

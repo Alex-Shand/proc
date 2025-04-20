@@ -30,7 +30,7 @@ impl<T: Parse> Optional<T> {
 }
 
 #[sealed::sealed]
-impl<T: Parse> super::RawMeta for Optional<T> {
+impl<T: Parse> super::MetaParser for Optional<T> {
     type Item = Option<T>;
 
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
@@ -52,7 +52,7 @@ mod tests {
     use proc_macro2::Span;
     use quote::ToTokens;
 
-    use super::{super::RawMeta as _, Optional};
+    use super::{super::MetaParser as _, Optional};
 
     #[test]
     fn parse_present() -> syn::Result<()> {

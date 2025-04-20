@@ -8,9 +8,9 @@ pub fn derive(
     #[allow(clippy::needless_pass_by_value)]
     /// Docs
     pub fn derive(
-        arg1: <Required<Arg1> as proc_common::meta::RawMeta>::Item,
-        arg2: <Optional<Arg2> as proc_common::meta::RawMeta>::Item,
-        arg3: <Switch as proc_common::meta::RawMeta>::Item,
+        arg1: <Required<Arg1> as proc_common::meta::MetaParser>::Item,
+        arg2: <Optional<Arg2> as proc_common::meta::MetaParser>::Item,
+        arg3: <Switch as proc_common::meta::MetaParser>::Item,
         item: InputType,
     ) -> Result<OutputType> {
         ::core::panicking::panic("not yet implemented")
@@ -21,9 +21,8 @@ pub fn derive(
             return ::syn::__private::TokenStream::from(err.to_compile_error());
         }
     };
-    let (__proc_internal_item, __proc_internal_args) = proc_common::proc_derive_last_argument_must_implement_meta_derive_input(
-        __proc_internal_item,
-        "my_derive",
+    let __proc_internal_args = proc_common::proc_derive_last_argument_must_implement_meta_derive_input(
+        &__proc_internal_item,
     );
     let arg_spec = (
         <Required<Arg1>>::new("arg1"),
@@ -32,6 +31,7 @@ pub fn derive(
     );
     let (arg1, arg2, arg3) = match proc_common::meta::parse_attrs(
         arg_spec,
+        "my_derive",
         &__proc_internal_args[..],
     ) {
         Ok(result) => result,

@@ -16,16 +16,19 @@ mod required;
 mod switch;
 mod tuple;
 
-#[doc(hidden)]
+/// Parser for attribute meta-argument syntax
 #[sealed::sealed]
-pub trait RawMeta: Sized {
+pub trait MetaParser: Sized {
+    #[doc(hidden)]
     type Item;
+    #[doc(hidden)]
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool>;
+    #[doc(hidden)]
     fn validate(self) -> Result<Self::Item>;
 }
 
 #[doc(hidden)]
-pub fn parse_bare<M: RawMeta>(
+pub fn parse_bare<M: MetaParser>(
     mut parser: M,
     tokens: TokenStream,
 ) -> Result<M::Item> {
@@ -39,12 +42,16 @@ pub fn parse_bare<M: RawMeta>(
     parser.validate()
 }
 
-#[doc(hidden)]
-pub fn parse_attrs<M: RawMeta>(
+/// Parse meta attributes
+///
+/// The provided attribute list is filtered for only attributes matching the
+/// provided attribute name and parsed according to the provided parser
+pub fn parse_attrs<M: MetaParser>(
     mut parser: M,
+    attribute: &str,
     attrs: &[Attribute],
 ) -> Result<M::Item> {
-    for attr in attrs {
+    for attr in attrs.iter().filter(|a| a.path().is_ident(attribute)) {
         attr.parse_nested_meta(|meta| {
             if parser.parse(&meta)? {
                 return Ok(());
@@ -59,65 +66,33 @@ pub fn parse_attrs<M: RawMeta>(
 #[sealed::sealed]
 pub trait DeriveInput: Sized {
     #[doc(hidden)]
-    fn skim_attributes(self, guard: &'static str) -> (Self, Vec<Attribute>);
+    fn skim_attributes(&self) -> &[Attribute];
 }
 
 #[sealed::sealed]
 impl DeriveInput for syn::DeriveInput {
-    fn skim_attributes(
-        mut self,
-        guard: &'static str,
-    ) -> (Self, Vec<Attribute>) {
-        let (our_attrs, rest) = self
-            .attrs
-            .into_iter()
-            .partition(|a| a.path().is_ident(guard));
-        self.attrs = rest;
-        (self, our_attrs)
+    fn skim_attributes(&self) -> &[Attribute] {
+        &self.attrs
     }
 }
 
 #[sealed::sealed]
 impl DeriveInput for syn::ItemStruct {
-    fn skim_attributes(
-        mut self,
-        guard: &'static str,
-    ) -> (Self, Vec<Attribute>) {
-        let (our_attrs, rest) = self
-            .attrs
-            .into_iter()
-            .partition(|a| a.path().is_ident(guard));
-        self.attrs = rest;
-        (self, our_attrs)
+    fn skim_attributes(&self) -> &[Attribute] {
+        &self.attrs
     }
 }
 
 #[sealed::sealed]
 impl DeriveInput for syn::ItemEnum {
-    fn skim_attributes(
-        mut self,
-        guard: &'static str,
-    ) -> (Self, Vec<Attribute>) {
-        let (our_attrs, rest) = self
-            .attrs
-            .into_iter()
-            .partition(|a| a.path().is_ident(guard));
-        self.attrs = rest;
-        (self, our_attrs)
+    fn skim_attributes(&self) -> &[Attribute] {
+        &self.attrs
     }
 }
 
 #[sealed::sealed]
 impl DeriveInput for syn::ItemUnion {
-    fn skim_attributes(
-        mut self,
-        guard: &'static str,
-    ) -> (Self, Vec<Attribute>) {
-        let (our_attrs, rest) = self
-            .attrs
-            .into_iter()
-            .partition(|a| a.path().is_ident(guard));
-        self.attrs = rest;
-        (self, our_attrs)
+    fn skim_attributes(&self) -> &[Attribute] {
+        &self.attrs
     }
 }

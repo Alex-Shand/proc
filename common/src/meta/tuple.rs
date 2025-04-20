@@ -43,7 +43,7 @@ macro_rules! tuple_impl {
     ($t:ident) => {};
     ($t:ident, $($rest:ident),+) => {
         #[sealed::sealed]
-        impl<$t: super::RawMeta, $($rest: super::RawMeta),*> super::RawMeta for ($t, $($rest),*) {
+        impl<$t: super::MetaParser, $($rest: super::MetaParser),*> super::MetaParser for ($t, $($rest),*) {
             type Item = ($t::Item, $($rest::Item),*);
 
             fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> syn::Result<bool> {
@@ -70,7 +70,7 @@ mod tests {
     use quote::ToTokens as _;
     use rstest::rstest;
 
-    use super::super::{Optional, RawMeta as _, Required, Switch};
+    use super::super::{MetaParser as _, Optional, Required, Switch};
 
     #[rstest]
     #[case(

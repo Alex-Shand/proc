@@ -9,9 +9,9 @@ pub fn test(
     #[allow(clippy::needless_pass_by_value)]
     /// Docs
     pub fn test(
-        arg1: <Required<Arg1> as proc_common::meta::RawMeta>::Item,
-        arg2: <Optional<Arg2> as proc_common::meta::RawMeta>::Item,
-        arg3: <Switch as proc_common::meta::RawMeta>::Item,
+        arg1: <Required<Arg1> as proc_common::meta::MetaParser>::Item,
+        arg2: <Optional<Arg2> as proc_common::meta::MetaParser>::Item,
+        arg3: <Switch as proc_common::meta::MetaParser>::Item,
         item: InputType,
     ) -> Result<OutputType> {
         ::core::panicking::panic("not yet implemented")

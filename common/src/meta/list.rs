@@ -36,7 +36,7 @@ impl<T: Parse> List<T> {
 }
 
 #[sealed::sealed]
-impl<T: Parse> super::RawMeta for List<T> {
+impl<T: Parse> super::MetaParser for List<T> {
     type Item = Vec<T>;
 
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
@@ -63,7 +63,7 @@ mod tests {
     use proc_macro2::Span;
     use quote::ToTokens;
 
-    use super::{super::RawMeta as _, List};
+    use super::{super::MetaParser as _, List};
 
     #[test]
     fn parse_full_list() -> syn::Result<()> {

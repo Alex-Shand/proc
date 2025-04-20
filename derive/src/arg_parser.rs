@@ -45,9 +45,8 @@ impl ToTokens for ArgumentParser<'_> {
         let item_type = self.arg_spec.item_type();
         tokens.extend(quote! {
             let #item = #crate_::syn::parse_macro_input!(#item as #item_type);
-            let (#item, #args) = #crate_::proc_derive_last_argument_must_implement_meta_derive_input(
-                #item,
-                stringify!(#attribute),
+            let #args = #crate_::proc_derive_last_argument_must_implement_meta_derive_input(
+                &#item
             );
         });
         if self.arg_spec.is_empty() {
@@ -69,7 +68,11 @@ impl ToTokens for ArgumentParser<'_> {
         let crate_resolve = arg_spec.crate_resolve();
         tokens.extend(quote! {
             let arg_spec = #arg_spec;
-            let #matcher = match #crate_::meta::parse_attrs(arg_spec, &#args[..]) {
+            let #matcher = match #crate_::meta::parse_attrs(
+                arg_spec,
+                stringify!(#attribute),
+                &#args[..]
+            ) {
                 Ok(result) => result,
                 Err(e) => return e.into_compile_error().into()
             };

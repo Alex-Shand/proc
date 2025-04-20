@@ -34,7 +34,7 @@ impl<T: Parse> Required<T> {
 }
 
 #[sealed::sealed]
-impl<T: Parse> super::RawMeta for Required<T> {
+impl<T: Parse> super::MetaParser for Required<T> {
     type Item = T;
 
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
@@ -65,7 +65,7 @@ mod tests {
     use proc_macro2::Span;
     use quote::ToTokens;
 
-    use super::{super::RawMeta as _, Required};
+    use super::{super::MetaParser as _, Required};
 
     #[test]
     fn parse_present() -> syn::Result<()> {

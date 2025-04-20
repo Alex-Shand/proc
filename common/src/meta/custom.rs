@@ -29,7 +29,7 @@ impl<T: Meta> Custom<T> {
 }
 
 #[sealed::sealed]
-impl<T: Meta> super::RawMeta for Custom<T> {
+impl<T: Meta> super::MetaParser for Custom<T> {
     type Item = T;
 
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
@@ -45,11 +45,9 @@ impl<T: Meta> super::RawMeta for Custom<T> {
     }
 }
 
-/// .
+/// Custom meta argument parser
 pub trait Meta: Default {
-    ///
-    /// # Errors
-    ///
+    #[allow(missing_docs)]
     fn parse(stream: ParseStream<'_>) -> Result<Self>;
 }
 
@@ -65,7 +63,7 @@ mod tests {
     use proc_macro2::Span;
     use quote::ToTokens;
 
-    use super::{super::RawMeta as _, Custom};
+    use super::{super::MetaParser as _, Custom};
 
     #[test]
     fn parse_present() -> syn::Result<()> {

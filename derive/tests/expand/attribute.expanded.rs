@@ -16,9 +16,8 @@ pub fn derive(
             return ::syn::__private::TokenStream::from(err.to_compile_error());
         }
     };
-    let (__proc_internal_item, __proc_internal_args) = proc_common::proc_derive_last_argument_must_implement_meta_derive_input(
-        __proc_internal_item,
-        "derive",
+    let __proc_internal_args = proc_common::proc_derive_last_argument_must_implement_meta_derive_input(
+        &__proc_internal_item,
     );
     if !__proc_internal_args.is_empty() {
         return proc_common::syn::Error::new_spanned(
