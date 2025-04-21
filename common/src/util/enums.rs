@@ -68,7 +68,7 @@ impl ToTokens for EnumMatcher<'_> {
 /// The [`ToTokens`] implementation generates `{ field, ... }`, `( _<idx>, ...
 /// )` for struct and tuple variants respectivley, and nothing for unit variants.
 #[expect(missing_debug_implementations)]
-pub struct EnumFieldMatcher<'a>(pub(crate) &'a Fields);
+pub struct EnumFieldMatcher<'a>(pub &'a Fields);
 
 impl ToTokens for EnumFieldMatcher<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
