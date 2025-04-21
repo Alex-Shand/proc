@@ -101,7 +101,7 @@ pub use proc_common::{
     proc_macro_function_must_return_proc_result,
     proc_macro2::TokenStream,
     quote, syn,
-    syn::{DeriveInput, ItemEnum, ItemStruct, Path, Result},
+    syn::{DeriveInput, ItemEnum, ItemFn, ItemStruct, Path, Result},
     util,
 };
 /// Wrapper macro for defining derive macros
