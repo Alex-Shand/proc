@@ -6,8 +6,8 @@ use syn::{Error, Field, Ident, Index};
 
 pub use self::{
     crate_and::CrateAnd,
-    enums::{EnumMatcher, VariantExpander},
-    for_each_field::ForEachField,
+    enums::{EnumFieldMatcher, EnumMatcher, VariantExpander},
+    for_each_field::{field_names_and_types, fields, ForEachField},
     result_formatter::ResultFormatter,
     struct_enum_deriver::{EnumData, StructData, StructEnumDeriver},
 };

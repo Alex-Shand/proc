@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Ident, Type, Variant};
+use syn::{Fields, Ident, Type, Variant};
 
 use super::{standard_ident, ForEachField};
 
@@ -57,6 +57,22 @@ impl ToTokens for EnumMatcher<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.0.ident.to_tokens(tokens);
         ForEachField(&self.0.fields, |idx, field| {
+            standard_ident(&idx, field).into_token_stream()
+        })
+        .to_tokens(tokens);
+    }
+}
+
+/// Identical to [EnumMatcher] but only takes the [Fields] from the enum variant.
+///
+/// The [`ToTokens`] implementation generates `{ field, ... }`, `( _<idx>, ...
+/// )` for struct and tuple variants respectivley, and nothing for unit variants.
+#[expect(missing_debug_implementations)]
+pub struct EnumFieldMatcher<'a>(pub(crate) &'a Fields);
+
+impl ToTokens for EnumFieldMatcher<'_> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        ForEachField(self.0, |idx, field| {
             standard_ident(&idx, field).into_token_stream()
         })
         .to_tokens(tokens);

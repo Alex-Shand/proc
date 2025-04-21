@@ -1,6 +1,10 @@
+use std::{borrow::Cow, iter};
+
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Field, Fields, Index};
+use syn::{Field, Fields, Ident, Index, Type};
+
+use super::standard_ident;
 
 /// Helper for handling struct fields in a standardised way.
 ///
@@ -33,6 +37,69 @@ impl<F: Fn(Index, &Field) -> TokenStream> ToTokens for ForEachField<'_, F> {
                     .map(|(i, f)| (self.1)(Index::from(i), f));
                 tokens.extend(quote! { ( #(#fields),* ) });
             }
+        }
+    }
+}
+
+/// Iterator over fields with [Index]
+///
+/// Same functionality as [ForEachField] without any opinions on formatting
+pub fn fields(fields: &Fields) -> impl Iterator<Item = (Index, &Field)> {
+    match fields {
+        Fields::Unit => ThreeIterators::One(iter::empty()),
+        Fields::Named(fields) => ThreeIterators::Two(
+            fields
+                .named
+                .iter()
+                .enumerate()
+                .map(|(i, f)| (Index::from(i), f)),
+        ),
+        Fields::Unnamed(fields) => ThreeIterators::Three(
+            fields
+                .unnamed
+                .iter()
+                .enumerate()
+                .map(|(i, f)| (Index::from(i), f)),
+        ),
+    }
+}
+
+/// Iterator over field name and type
+///
+/// Field names are generated using [standard_ident]
+pub fn field_names_and_types(
+    fields: &Fields,
+) -> impl Iterator<Item = (Cow<'_, Ident>, &Type)> {
+    self::fields(fields).map(|(idx, field)| {
+        let ident = standard_ident(&idx, field);
+        (ident, &field.ty)
+    })
+}
+
+enum ThreeIterators<
+    'a,
+    I1: Iterator<Item = (Index, &'a Field)>,
+    I2: Iterator<Item = (Index, &'a Field)>,
+    I3: Iterator<Item = (Index, &'a Field)>,
+> {
+    One(I1),
+    Two(I2),
+    Three(I3),
+}
+
+impl<'a, I1, I2, I3> Iterator for ThreeIterators<'a, I1, I2, I3>
+where
+    I1: Iterator<Item = (Index, &'a Field)>,
+    I2: Iterator<Item = (Index, &'a Field)>,
+    I3: Iterator<Item = (Index, &'a Field)>,
+{
+    type Item = (Index, &'a Field);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            ThreeIterators::One(i) => i.next(),
+            ThreeIterators::Two(i) => i.next(),
+            ThreeIterators::Three(i) => i.next(),
         }
     }
 }
