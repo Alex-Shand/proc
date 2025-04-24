@@ -15,6 +15,7 @@ pub use self::{
 mod crate_and;
 mod enums;
 mod for_each_field;
+pub mod parsers;
 mod result_formatter;
 mod struct_enum_deriver;
 
