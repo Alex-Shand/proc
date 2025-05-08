@@ -16,6 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: rustfmt
+      run: rustup component add rustfmt
+    - name: cargo expand
+      run: cargo install cargo-expand
     - name: Build
       run: cargo build --verbose --workspace
     - name: Run tests
