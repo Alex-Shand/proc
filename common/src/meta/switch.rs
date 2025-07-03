@@ -1,3 +1,5 @@
+use proc_macro2::Span;
+
 /// Boolean switch meta argument
 ///
 /// Argument format is a single identifier which can be present or absent. The
@@ -42,7 +44,7 @@ impl super::MetaParser for Switch {
         Ok(false)
     }
 
-    fn validate(self) -> syn::Result<Self::Item> {
+    fn validate(self, _: Span) -> syn::Result<Self::Item> {
         Ok(self.taken)
     }
 }
@@ -62,7 +64,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        assert!(parser.validate()?);
+        assert!(parser.validate(Span::call_site())?);
         Ok(())
     }
 
@@ -74,7 +76,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        assert!(!parser.validate()?);
+        assert!(!parser.validate(Span::call_site())?);
         Ok(())
     }
 

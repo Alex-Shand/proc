@@ -1,5 +1,5 @@
-use proc_macro2::TokenStream;
-use syn::{parse::Parser as _, Attribute, Result};
+use proc_macro2::{Span, TokenStream};
+use syn::{parse::Parser as _, spanned::Spanned as _, Attribute, Result};
 
 pub use self::{
     custom::{Custom, Meta},
@@ -24,7 +24,7 @@ pub trait MetaParser: Sized {
     #[doc(hidden)]
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool>;
     #[doc(hidden)]
-    fn validate(self) -> Result<Self::Item>;
+    fn validate(self, attr_span: Span) -> Result<Self::Item>;
 }
 
 #[doc(hidden)]
@@ -39,7 +39,7 @@ pub fn parse_bare<M: MetaParser>(
         Err(meta.error("unrecognised argument"))
     });
     let () = parse_fn.parse2(tokens)?;
-    parser.validate()
+    parser.validate(Span::call_site())
 }
 
 /// Parse meta attributes
@@ -51,7 +51,11 @@ pub fn parse_attrs<M: MetaParser>(
     attribute: &str,
     attrs: &[Attribute],
 ) -> Result<M::Item> {
+    let mut anchor = None;
     for attr in attrs.iter().filter(|a| a.path().is_ident(attribute)) {
+        if anchor.is_none() {
+            anchor = Some(attr.span());
+        }
         attr.parse_nested_meta(|meta| {
             if parser.parse(&meta)? {
                 return Ok(());
@@ -59,7 +63,7 @@ pub fn parse_attrs<M: MetaParser>(
             Err(meta.error("unrecognised argument"))
         })?;
     }
-    parser.validate()
+    parser.validate(anchor.unwrap_or_else(Span::call_site))
 }
 
 /// Trait implemented by valid inputs to a derive macro

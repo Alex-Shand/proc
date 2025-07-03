@@ -1,3 +1,4 @@
+use proc_macro2::Span;
 use syn::{
     parse::{Parse, ParseStream},
     Result,
@@ -40,7 +41,7 @@ impl<T: Meta> super::MetaParser for Custom<T> {
         Ok(false)
     }
 
-    fn validate(self) -> Result<Self::Item> {
+    fn validate(self, _: Span) -> Result<Self::Item> {
         Ok(self.value.unwrap_or_default())
     }
 }
@@ -74,7 +75,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate()?;
+        let result = parser.validate(Span::call_site())?;
         assert!(result.is_some());
         let result = result.unwrap();
         assert_eq!("1 + 2", result.into_token_stream().to_string());
@@ -89,7 +90,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate()?;
+        let result = parser.validate(Span::call_site())?;
         assert!(result.is_none());
         Ok(())
     }

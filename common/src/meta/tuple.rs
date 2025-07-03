@@ -20,12 +20,12 @@ macro_rules! reverse_and_concat {
 }
 
 macro_rules! expand_validate {
-    ([$self:ident][][$($tt:tt)*][$($idents:ident),*]) => {
+    ([$self:ident, $attr_span:ident][][$($tt:tt)*][$($idents:ident),*]) => {
         $($tt)*
         return Ok(reverse!([$($idents),*][]));
     };
-    ([$self:ident][$t:ident$(, $rest:ident)*][$($tt:tt)*][$($idents:ident),*]) => {
-        expand_validate!([$self][$($rest),*][#[allow(non_snake_case)] let $t = index_tuple!($self, $t$(, $rest)*).validate()?;$($tt)*][$($idents),*])
+    ([$self:ident, $attr_span:ident][$t:ident$(, $rest:ident)*][$($tt:tt)*][$($idents:ident),*]) => {
+        expand_validate!([$self, $attr_span][$($rest),*][#[allow(non_snake_case)] let $t = index_tuple!($self, $t$(, $rest)*).validate($attr_span)?;$($tt)*][$($idents),*])
     };
 }
 
@@ -50,8 +50,8 @@ macro_rules! tuple_impl {
                 expand_parse!([self, meta][$t, $($rest),*][][$t, $($rest),*]);
             }
 
-            fn validate(self) -> syn::Result<Self::Item> {
-                expand_validate!([self][$t, $($rest),*][][$t, $($rest),*]);
+            fn validate(self, attr_span: proc_macro2::Span) -> syn::Result<Self::Item> {
+                expand_validate!([self, attr_span][$t, $($rest),*][][$t, $($rest),*]);
             }
         }
         tuple_impl!($($rest),*);
@@ -106,7 +106,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let actual = parser.validate()?;
+        let actual = parser.validate(Span::call_site())?;
         assert_eq!(expected.0, actual.0.into_token_stream().to_string());
         assert_eq!(
             expected.1.map(ToOwned::to_owned),
@@ -132,7 +132,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate();
+        let result = parser.validate(Span::call_site());
         assert!(result.is_err());
         let Err(error) = result else { unreachable!() };
         assert_eq!(

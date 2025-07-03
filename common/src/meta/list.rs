@@ -1,3 +1,4 @@
+use proc_macro2::Span;
 use syn::{parenthesized, parse::Parse, Result, Token};
 
 /// List meta argument
@@ -52,7 +53,7 @@ impl<T: Parse> super::MetaParser for List<T> {
         Ok(false)
     }
 
-    fn validate(self) -> Result<Self::Item> {
+    fn validate(self, _: Span) -> Result<Self::Item> {
         Ok(self.value)
     }
 }
@@ -74,7 +75,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate()?;
+        let result = parser.validate(Span::call_site())?;
         let result = result
             .into_iter()
             .map(|r| r.into_token_stream().to_string())
@@ -91,7 +92,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate()?;
+        let result = parser.validate(Span::call_site())?;
         assert!(result.is_empty());
         Ok(())
     }
@@ -104,7 +105,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate()?;
+        let result = parser.validate(Span::call_site())?;
         assert!(result.is_empty());
         Ok(())
     }

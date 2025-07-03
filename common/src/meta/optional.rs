@@ -1,3 +1,4 @@
+use proc_macro2::Span;
 use syn::{parse::Parse, Result};
 
 /// Optional meta argument
@@ -41,7 +42,7 @@ impl<T: Parse> super::MetaParser for Optional<T> {
         Ok(false)
     }
 
-    fn validate(self) -> Result<Self::Item> {
+    fn validate(self, _: Span) -> Result<Self::Item> {
         Ok(self.value)
     }
 }
@@ -63,7 +64,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate()?;
+        let result = parser.validate(Span::call_site())?;
         assert!(result.is_some());
         let result = result.unwrap();
         assert_eq!("true", result.into_token_stream().to_string());
@@ -78,7 +79,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate()?;
+        let result = parser.validate(Span::call_site())?;
         assert!(result.is_none());
         Ok(())
     }

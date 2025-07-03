@@ -1,5 +1,5 @@
 use proc_macro2::Span;
-use syn::{parse::Parse, spanned::Spanned as _, Error, Result};
+use syn::{parse::Parse, Error, Result};
 
 use super::Optional;
 
@@ -19,7 +19,6 @@ use super::Optional;
 #[derive(Debug)]
 pub struct Required<T: Parse> {
     name: &'static str,
-    anchor: Span,
     opt: Optional<T>,
 }
 
@@ -29,7 +28,6 @@ impl<T: Parse> Required<T> {
     pub fn new(name: &'static str) -> Self {
         Self {
             name,
-            anchor: Span::call_site(),
             opt: Optional::new(name),
         }
     }
@@ -40,15 +38,14 @@ impl<T: Parse> super::MetaParser for Required<T> {
     type Item = T;
 
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
-        self.anchor = meta.path.span();
         self.opt.parse(meta)
     }
 
-    fn validate(self) -> Result<Self::Item> {
-        if let Some(value) = self.opt.validate()? {
+    fn validate(self, attr_span: Span) -> Result<Self::Item> {
+        if let Some(value) = self.opt.validate(attr_span)? {
             Ok(value)
         } else {
-            Err(required_argument_error(self.name, self.anchor))
+            Err(required_argument_error(self.name, attr_span))
         }
     }
 }
@@ -75,7 +72,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate()?;
+        let result = parser.validate(Span::call_site())?;
         assert_eq!("true", result.into_token_stream().to_string());
         Ok(())
     }
@@ -88,7 +85,7 @@ mod tests {
             assert!(parser.parse(&meta)?);
             Ok(())
         })?;
-        let result = parser.validate();
+        let result = parser.validate(Span::call_site());
         assert!(result.is_err());
         let Err(error) = result else { unreachable!() };
         assert_eq!(
