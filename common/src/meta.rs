@@ -1,5 +1,5 @@
 use proc_macro2::{Span, TokenStream};
-use syn::{parse::Parser as _, spanned::Spanned as _, Attribute, Result};
+use syn::{parse::Parser as _, spanned::Spanned, Attribute, Result};
 
 pub use self::{
     custom::{Custom, Meta},
@@ -50,12 +50,9 @@ pub fn parse_attrs<M: MetaParser>(
     mut parser: M,
     attribute: &str,
     attrs: &[Attribute],
+    target: &impl Spanned,
 ) -> Result<M::Item> {
-    let mut anchor = None;
     for attr in attrs.iter().filter(|a| a.path().is_ident(attribute)) {
-        if anchor.is_none() {
-            anchor = Some(attr.span());
-        }
         attr.parse_nested_meta(|meta| {
             if parser.parse(&meta)? {
                 return Ok(());
@@ -63,7 +60,7 @@ pub fn parse_attrs<M: MetaParser>(
             Err(meta.error("unrecognised argument"))
         })?;
     }
-    parser.validate(anchor.unwrap_or_else(Span::call_site))
+    parser.validate(target.span())
 }
 
 /// Trait implemented by valid inputs to a derive macro
