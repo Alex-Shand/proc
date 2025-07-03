@@ -33,6 +33,7 @@ pub fn derive(
         arg_spec,
         "my_derive",
         &__proc_internal_args[..],
+        &proc_common::Span::call_site(),
     ) {
         Ok(result) => result,
         Err(e) => return e.into_compile_error().into(),

@@ -71,7 +71,8 @@ impl ToTokens for ArgumentParser<'_> {
             let #matcher = match #crate_::meta::parse_attrs(
                 arg_spec,
                 stringify!(#attribute),
-                &#args[..]
+                &#args[..],
+                &#crate_::Span::call_site(),
             ) {
                 Ok(result) => result,
                 Err(e) => return e.into_compile_error().into()

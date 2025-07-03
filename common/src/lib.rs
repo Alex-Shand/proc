@@ -18,8 +18,8 @@
 #![allow(clippy::similar_names)]
 #![allow(clippy::missing_errors_doc)]
 
-pub use proc_macro2;
 use proc_macro2::TokenStream;
+pub use proc_macro2::{self, Span};
 use proc_macro_crate::FoundCrate;
 pub use quote;
 use quote::ToTokens;
@@ -41,7 +41,7 @@ pub fn get_crate(name: &'static str) -> Result<Path> {
             let ident = quote::format_ident!("{name}");
             Ok(syn::parse_quote!(::#ident))
         }
-        Err(e) => Err(syn::Error::new(proc_macro2::Span::call_site(), e)),
+        Err(e) => Err(syn::Error::new(Span::call_site(), e)),
     }
 }
 

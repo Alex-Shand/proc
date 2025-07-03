@@ -99,7 +99,7 @@ pub use proc_common::{
     proc_derive_function_must_return_proc_result,
     proc_derive_last_argument_must_implement_meta_derive_input,
     proc_macro_function_must_return_proc_result,
-    proc_macro2::TokenStream,
+    proc_macro2::{Span, TokenStream},
     quote, syn,
     syn::{DeriveInput, ItemEnum, ItemFn, ItemStruct, Path, Result},
     util,
