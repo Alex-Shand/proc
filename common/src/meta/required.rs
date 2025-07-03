@@ -1,5 +1,5 @@
 use proc_macro2::Span;
-use syn::{parse::Parse, Error, Result};
+use syn::{parse::Parse, spanned::Spanned as _, Error, Result};
 
 use super::Optional;
 
@@ -19,6 +19,7 @@ use super::Optional;
 #[derive(Debug)]
 pub struct Required<T: Parse> {
     name: &'static str,
+    anchor: Span,
     opt: Optional<T>,
 }
 
@@ -28,6 +29,7 @@ impl<T: Parse> Required<T> {
     pub fn new(name: &'static str) -> Self {
         Self {
             name,
+            anchor: Span::call_site(),
             opt: Optional::new(name),
         }
     }
@@ -38,6 +40,7 @@ impl<T: Parse> super::MetaParser for Required<T> {
     type Item = T;
 
     fn parse(&mut self, meta: &syn::meta::ParseNestedMeta<'_>) -> Result<bool> {
+        self.anchor = meta.path.span();
         self.opt.parse(meta)
     }
 
@@ -45,18 +48,15 @@ impl<T: Parse> super::MetaParser for Required<T> {
         if let Some(value) = self.opt.validate()? {
             Ok(value)
         } else {
-            Err(required_argument_error(self.name))
+            Err(required_argument_error(self.name, self.anchor))
         }
     }
 }
 
 /// Provides standardized formatting for a missing required meta argument
 #[must_use]
-pub fn required_argument_error(name: &'static str) -> Error {
-    Error::new(
-        Span::call_site(),
-        format_args!("missing required argument: {name}"),
-    )
+pub fn required_argument_error(name: &'static str, span: Span) -> Error {
+    Error::new(span, format_args!("missing required argument: {name}"))
 }
 
 #[cfg(test)]
