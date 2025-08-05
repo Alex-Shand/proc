@@ -11,5 +11,5 @@ proc_attribute = { version = "0.1.0", path = "../attribute" }
 proc_common = { version = "0.1.0", path = "../common" }
 
 [dev-dependencies]
-macrotest = "1.1.0"
+macrotest = "1.2.0"
 trybuild = "1.0.106"
