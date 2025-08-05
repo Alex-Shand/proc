@@ -12,4 +12,4 @@ syn = { version = "2.0.104", features = ["derive", "full", "extra-traits"] }
 
 [dev-dependencies]
 pa = { version = "1.4.1", package = "pretty_assertions" }
-rstest = "0.25.0"
+rstest = "0.26.1"
