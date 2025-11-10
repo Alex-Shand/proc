@@ -13,4 +13,4 @@ convert_case = "0.10.0"
 
 [dev-dependencies]
 macrotest = "1.2.0"
-trybuild = "1.0.113"
+trybuild = "1.0.114"
