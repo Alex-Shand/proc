@@ -9,7 +9,7 @@ proc-macro = true
 [dependencies]
 proc_attribute = { version = "0.1.0", path = "../attribute" }
 proc_common = { version = "0.1.0", path = "../common" }
-convert_case = "0.8.0"
+convert_case = "0.10.0"
 
 [dev-dependencies]
 macrotest = "1.2.0"
