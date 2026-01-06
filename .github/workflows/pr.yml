@@ -4,6 +4,8 @@ name: Merge Dependabot PRs
 #     - cron: "0 0 * * *"
 on: workflow_dispatch
   
+env:
+    GH_TOKEN: ${{ github.token }}
 
 jobs:
   pr:
