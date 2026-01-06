@@ -11,9 +11,6 @@ jobs:
   pr:
     runs-on: ubuntu-latest
     steps:
-      - name: PWD
-        run: pwd
-      - name: LS
-        run: ls -al
+      - uses: actions/checkout@v5
       - name: Pick PR
         run: gh pr list --json url,author,statusCheckRollup | jq -r '[.[] | select(.author.login == "app/dependabot") | select(all(.statusCheckRollup[]; .conclusion == "SUCCESS")) | .url][0]'
