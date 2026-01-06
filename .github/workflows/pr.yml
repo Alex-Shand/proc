@@ -12,12 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Pick PR
+      - name: Pick and Merge PR
         run: |
           PR=$(gh pr list --json url,author,statusCheckRollup | jq -r '[.[] | select(.author.login == "app/dependabot") | select(all(.statusCheckRollup[]; .conclusion == "SUCCESS")) | .url][0]')
-          echo "::set-env name=PR:$PR"
-      - name: Merge PR
-        run: |
           if [[ "$PR" != "null" ]]; then
             echo "Merging $PR"
             gh pr merge $PR
