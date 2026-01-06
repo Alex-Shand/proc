@@ -13,5 +13,7 @@ jobs:
     steps:
       - name: PWD
         run: pwd
+      - name: LS
+        run: ls -al
       - name: Pick PR
         run: gh pr list --json url,author,statusCheckRollup | jq -r '[.[] | select(.author.login == "app/dependabot") | select(all(.statusCheckRollup[]; .conclusion == "SUCCESS")) | .url][0]'
