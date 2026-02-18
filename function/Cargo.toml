@@ -12,4 +12,4 @@ proc_common = { version = "0.1.0", path = "../common" }
 
 [dev-dependencies]
 macrotest = "1.2.1"
-trybuild = "1.0.115"
+trybuild = "1.0.116"
