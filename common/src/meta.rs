@@ -1,11 +1,11 @@
 use proc_macro2::{Span, TokenStream};
-use syn::{parse::Parser as _, spanned::Spanned, Attribute, Result};
+use syn::{Attribute, Result, parse::Parser as _, spanned::Spanned};
 
 pub use self::{
     custom::{Custom, Meta},
     list::List,
     optional::Optional,
-    required::{required_argument_error, Required},
+    required::{Required, required_argument_error},
     switch::Switch,
 };
 
@@ -61,6 +61,20 @@ pub fn parse_attrs<M: MetaParser>(
         })?;
     }
     parser.validate(target.span())
+}
+
+/// Parse an attribute according to a parser
+pub fn parse_attr<M: MetaParser>(
+    mut parser: M,
+    attr: &Attribute,
+) -> Result<M::Item> {
+    attr.parse_nested_meta(|meta| {
+        if parser.parse(&meta)? {
+            return Ok(());
+        }
+        Err(meta.error("unrecognised argument"))
+    })?;
+    parser.validate(attr.span())
 }
 
 /// Trait implemented by valid inputs to a derive macro
