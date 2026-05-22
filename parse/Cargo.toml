@@ -1,14 +1,14 @@
 [package]
 name = "proc_parse"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [lib]
 proc-macro = true
 
 [dependencies]
-proc_derive = { version = "0.1.0", path = "../derive" }
-proc_common = { version = "0.1.0", path = "../common" }
+proc_derive = { path = "../derive" }
+proc_common = { path = "../common" }
 
 [dev-dependencies]
-trybuild = "1.0.116"
+trybuild.workspace = true

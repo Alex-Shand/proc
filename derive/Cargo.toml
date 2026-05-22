@@ -1,16 +1,16 @@
 [package]
 name = "proc_derive"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [lib]
 proc-macro = true
 
 [dependencies]
-proc_attribute = { version = "0.1.0", path = "../attribute" }
-proc_common = { version = "0.1.0", path = "../common" }
-convert_case = "0.11.0"
+proc_attribute = { path = "../attribute" }
+proc_common = { path = "../common" }
+convert_case.workspace = true
 
 [dev-dependencies]
-macrotest = "1.2.1"
-trybuild = "1.0.116"
+macrotest.workspace = true
+trybuild.workspace = true

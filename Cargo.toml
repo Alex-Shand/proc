@@ -1,14 +1,30 @@
-[package]
-name = "proc"
+[workspace]
+members = ["attribute", "common", "derive", "parse", "function"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-proc_attribute = { version = "0.1.0", path = "attribute" }
-proc_derive = { version = "0.1.0", path = "derive" }
-proc_parse = { version = "0.1.0", path = "parse" }
-proc_common = { version = "0.1.0", path = "common" }
-proc_function = { version = "0.1.0", path = "function" }
+[workspace.dependencies]
+macrotest = "1.2.1"
+trybuild = "1.0.116"
+proc-macro-crate = "3.5.0"
+proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
+quote = "1.0.45"
+sealed = "0.6.0"
+syn = { version = "2.0.117", features = ["derive", "full", "extra-traits"] }
+pa = { version = "1.4.1", package = "pretty_assertions" }
+rstest = "0.26.1"
+convert_case = "0.11.0"
 
-[workspace]
-members = ["attribute", "common", "derive", "parse", "function"]
+[package]
+name = "proc"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+proc_attribute = { path = "attribute" }
+proc_derive = { path = "derive" }
+proc_parse = { path = "parse" }
+proc_common = { path = "common" }
+proc_function = { path = "function" }

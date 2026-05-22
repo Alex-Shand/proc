@@ -29,7 +29,7 @@ impl ArgSpec {
                 a,
                 "proc::derive cannot be applied to receiver methods",
             ));
-        };
+        }
 
         // If host was passed to the macro then the first argument is reserved
         // for the injected crate. The last argument is always the item. Any
