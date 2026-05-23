@@ -1,18 +1,18 @@
 use proc_macro2::Span;
 use syn::{
-    Result, parenthesized,
+    Result,
     parse::{Parse, ParseStream},
 };
 
 /// Custom meta arg format
 ///
-/// Syntax is `key(<something>)` where `<something>` is defined by the [`Parse`]
+/// Syntax is `key <something>` where `<something>` is defined by the [`Parse`]
 /// implementation of `T`. The value exposed to the macro is `T`, if the key is
 /// not present `T`'s [`Default`] implementation is used.
 ///
 /// ```rust,ignore
 /// // E.g using Expr's Parse implementation
-/// #[my_macro(key(1 + 2))]
+/// #[my_macro(key 1 + 2)]
 /// fn item() {}
 /// ```
 #[derive(Debug)]
@@ -54,9 +54,7 @@ pub trait Meta: Default {
 
 impl<T: Parse> Meta for Option<T> {
     fn parse(stream: ParseStream<'_>) -> Result<Self> {
-        let content;
-        parenthesized!(content in stream);
-        Ok(Some(content.parse()?))
+        Ok(Some(stream.parse()?))
     }
 }
 
@@ -71,7 +69,7 @@ mod tests {
     #[test]
     fn parse_present() -> syn::Result<()> {
         let attr: syn::Attribute =
-            syn::parse_quote!(#[attribute(custom(1 + 2))]);
+            syn::parse_quote!(#[attribute(custom 1 + 2)]);
         let mut parser: Custom<Option<syn::Expr>> = Custom::new("custom");
         attr.parse_nested_meta(|meta| {
             assert!(parser.parse(&meta)?);
