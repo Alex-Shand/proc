@@ -11,7 +11,7 @@ trybuild = "1.0.116"
 proc-macro-crate = "3.5.0"
 proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
 quote = "1.0.45"
-sealed = "0.6.0"
+sealed = "0.7.0"
 syn = { version = "3.0.2", features = ["derive", "full", "extra-traits"] }
 pa = { version = "1.4.1", package = "pretty_assertions" }
 rstest = "0.26.1"
