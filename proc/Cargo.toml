@@ -1,0 +1,11 @@
+[package]
+name = "proc"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+proc_attribute = { path = "../attribute" }
+proc_derive = { path = "../derive" }
+proc_parse = { path = "../parse" }
+proc_common = { path = "../common" }
+proc_function = { path = "../function" }

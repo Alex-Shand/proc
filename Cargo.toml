@@ -1,5 +1,6 @@
 [workspace]
-members = ["attribute", "common", "derive", "parse", "function"]
+resolver = "3"
+members = ["proc", "attribute", "common", "derive", "parse", "function"]
 
 [workspace.package]
 version = "0.1.0"
@@ -7,24 +8,12 @@ edition = "2024"
 
 [workspace.dependencies]
 macrotest = "1.2.1"
-trybuild = "1.0.116"
+trybuild = "1.0.121"
 proc-macro-crate = "3.5.0"
-proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
-quote = "1.0.45"
 sealed = "0.7.0"
 syn = { version = "3.0.2", features = ["derive", "full", "extra-traits"] }
+proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
+quote = "1.0.47"
 pa = { version = "1.4.1", package = "pretty_assertions" }
 rstest = "0.27.0"
 convert_case = "0.12.0"
-
-[package]
-name = "proc"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-proc_attribute = { path = "attribute" }
-proc_derive = { path = "derive" }
-proc_parse = { path = "parse" }
-proc_common = { path = "common" }
-proc_function = { path = "function" }
